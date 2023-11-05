@@ -1,20 +1,21 @@
-from sqlalchemy import Column, Integer, String
-from sqlalchemy.orm import validates
+from sqlalchemy import Column, Integer, String, Enum
+from sqlalchemy.orm import relationship
 from services.database import Base
+import enum
+
+class Role(enum.Enum):
+    admin = "admin",
+    user = "user"
 
 class Usuario(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-    email = Column(String, unique=True, index=True)
-    username = Column(String, unique=True, index=True)
-    password = Column(String)
-    role = Column(String, default="user")
+    name = Column(String(100))
+    email = Column(String(100), unique=True, index=True)
+    username = Column(String(50), unique=True, index=True)
+    password = Column(String(255))
+    role = Column(Enum(Role), default=Role.user)
 
-    @validates('rol')
-    def validate_role(self, key, value):
-        allowed_values = ["admin", "user"]
-        if value not in allowed_values:
-            raise ValueError("El valor de 'role' no es válido.")
-        return value
+    slices = relationship("SliceUsuario", back_populates="user")
+
