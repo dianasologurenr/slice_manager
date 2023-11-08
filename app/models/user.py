@@ -7,7 +7,7 @@ class Role(enum.Enum):
     admin = "admin",
     user = "user"
 
-class Usuario(Base):
+class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -17,5 +17,5 @@ class Usuario(Base):
     password = Column(String(255))
     role = Column(Enum(Role), default=Role.user)
 
-    slices = relationship("SliceUsuario", back_populates="user")
+    slices = relationship("SliceUser", back_populates="user")
 
