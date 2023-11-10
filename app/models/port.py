@@ -11,7 +11,12 @@ class Port(Base):
     
     node = relationship("Node", back_populates="ports")
 
-    links = relationship('Link', primaryjoin='or_(Port.id==Link.id_port0, Port.id==Link.id_port1)')
+    links_as_port0 = relationship('Link', 
+                                  primaryjoin='Port.id==Link.id_port0',
+                                  back_populates='port0')
+    links_as_port1 = relationship('Link', 
+                                  primaryjoin='Port.id==Link.id_port1',
+                                  back_populates='port1')
 
 
 

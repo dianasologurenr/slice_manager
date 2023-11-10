@@ -11,5 +11,6 @@ class Security(Base):
     description = Column(String(100))
 
     nodes = relationship("Node", back_populates="security")
+    
     inbound = relationship("Inbound", back_populates="security")
     outbound = relationship("Outbound", back_populates="security")

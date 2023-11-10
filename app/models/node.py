@@ -15,7 +15,7 @@ class Node(Base):
     id_security = Column(Integer, ForeignKey("security.id"))
     id_flavor = Column(Integer, ForeignKey("flavors.id"))
 
-    image = relationship("Images", back_populates="nodes")
+    image = relationship("Image", back_populates="nodes")
     flavor = relationship("Flavor", back_populates="nodes")
     slice = relationship("Slice", back_populates="nodes")
     server = relationship("Server", back_populates="nodes")

@@ -9,6 +9,8 @@ from models.image import Image
 from models.flavor import Flavor
 from models.node import Node
 from models.security import Security
+from models.inbound import Inbound
+from models.outbound import Outbound
 from models.port import Port
 from models.link import Link
 
@@ -34,7 +36,7 @@ session.add(zone1)
 new_slice = Slice(
     name = "Test",
     topology = "lineal",
-    state = "not_deployed",
+    status = "not_deployed",
     az=zone1
 )
 session.add(new_slice)
@@ -98,14 +100,12 @@ session.add(worker3)
 ## Alerts
 alert_type1= Alert(
     name = "Carga de CPU",
-    description = "Uso de CPU superior al umbral establecido",
-    priority = "media"
+    description = "Uso de CPU superior al umbral establecido"
 )
 session.add(alert_type1)
 alert_type2= Alert(
     name = "Memoria RAM",
-    description = "Uso de memoria cerca del límite máximo",
-    priority = "media"
+    description = "Uso de memoria cerca del límite máximo"
 )
 session.add(alert_type2)
 alert_type3= Alert(

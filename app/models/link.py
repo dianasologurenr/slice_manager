@@ -10,6 +10,5 @@ class Link(Base):
     id_port0 = Column(Integer, ForeignKey('ports.id'))
     id_port1 = Column(Integer, ForeignKey('ports.id'))
 
-    port0 = relationship('Port', back_populates='links')
-    port1 = relationship('Port', back_populates='links')
-
+    port0 = relationship('Port', foreign_keys=[id_port0], back_populates='links_as_port0')
+    port1 = relationship('Port', foreign_keys=[id_port1], back_populates='links_as_port1')
