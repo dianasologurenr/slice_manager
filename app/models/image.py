@@ -4,8 +4,10 @@ from services.database import Base
 import enum
 
 class Status(enum.Enum):
-    admin = "admin",
-    user = "user"
+    disponible = "disponible",
+    descargando = "descargando",
+    error = "error"
+
 
 class Image(Base):
     __tablename__ = "images"

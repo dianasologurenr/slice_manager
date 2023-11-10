@@ -30,8 +30,9 @@ class Slice(Base):
     creationdate = Column(DateTime, default=datetime.now)
     id_az = Column(Integer, ForeignKey("availability_zone.id"))
 
-    users = relationship("SliceUser", back_populates="slice")
     az = relationship("AvailabilityZone", back_populates="slices")
+
+    users = relationship("SliceUser", back_populates="slice")
     nodes = relationship("Node", back_populates="slice")
 
 

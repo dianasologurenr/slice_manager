@@ -4,8 +4,10 @@ from services.database import Base
 import enum
 
 class Protocol(enum.Enum):
-    admin = "admin",
-    user = "user"
+    tcp = "tcp",
+    udp = "udp",
+    icmp = "icmp",
+    all = 'all'
 
 class Outbound(Base):
     __tablename__ = "outbound"

@@ -9,6 +9,8 @@ class Port(Base):
     name = Column(String(45))
     id_node = Column(Integer, ForeignKey('nodes.id')) 
     
+    node = relationship("Node", back_populates="ports")
+
     links = relationship('Link', primaryjoin='or_(Port.id==Link.id_port0, Port.id==Link.id_port1)')
 
 
