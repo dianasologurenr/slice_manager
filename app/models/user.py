@@ -4,7 +4,7 @@ from services.database import Base
 import enum
 
 class Role(enum.Enum):
-    admin = "admin",
+    admin = "admin"
     user = "user"
 
 class User(Base):
@@ -18,4 +18,3 @@ class User(Base):
     role = Column(Enum(Role), default=Role.user)
 
     slices = relationship("SliceUser", back_populates="user")
-
