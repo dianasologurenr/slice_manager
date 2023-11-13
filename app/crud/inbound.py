@@ -17,18 +17,3 @@ from models import outbound as models_outbound
 from models import alerts as models_alerts
 from schemas import schema
 
-def get_availability_zone(db: Session, skip: int = 0, limit: int = 100):
-    db_availability_zones = db.query(models_availability_zone.AvailabilityZone).offset(skip).limit(limit).all()
-    availability_zones = [convert_sqlalchemy_user_to_pydantic(db_availability_zone) for db_availability_zone in db_availability_zones]
-    return availability_zones
-
-
-def convert_sqlalchemy_user_to_pydantic(availability_zone: models_availability_zone.AvailabilityZone) -> schema.AvailabilityZone:
-    return schema.AvailabilityZone(
-        id = availability_zone.id,
-        name = availability_zone.name,
-        latitude = availability_zone.latitude,
-        longitude = availability_zone.longitude
-    )
-
-

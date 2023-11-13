@@ -34,6 +34,10 @@ def create_security_groups(db: Session, security_group: schema.SecurityGroupCrea
     db.refresh(db_security_groups)
     return convert_sqlalchemy_user_to_pydantic(db_security_groups)
 
+def get_security_group_by_id(db: Session, id: int):
+    user = db.query(models_security.Security).filter(models_security.Security.id == id).first()
+    return user
+
 def delete_security_groups(db: Session, security_group_id: int):
     db_security_groups = db.query(models_security.Security).filter(models_security.Security.id == security_group_id).first()
     db.delete(db_security_groups)
@@ -41,7 +45,7 @@ def delete_security_groups(db: Session, security_group_id: int):
     return {"message": "Security group deleted successfully"}
 
 
-def convert_sqlalchemy_user_to_pydantic(security_group: models_security.Security) -> schema.User:
+def convert_sqlalchemy_user_to_pydantic(security_group: models_security.Security) -> schema.SecurityGroup:
     return schema.SecurityGroup(
         id = security_group.id,
         name = security_group.name,

@@ -35,11 +35,11 @@ class AvailabilityZone(AvailabilityZoneBase):
 
 class SecurityGroup(SecurityGroupBase):
     name: str
-    description: float
+    description: str
 
 class SecurityGroupCreate(SecurityGroupBase):
     name: str
-    description: float
+    description: str
 
 # class Slice(UserBase):
 #     id: int
