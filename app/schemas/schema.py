@@ -59,4 +59,14 @@ class SecurityGroupCreate(SecurityGroupBase):
 
 
 
-    
+
+
+class ImageBase(BaseModel):
+    name: str
+    description: str
+
+class Image(BaseModel):
+    id: int
+    path: str
+    status: str
+

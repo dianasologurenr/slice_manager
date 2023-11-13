@@ -17,8 +17,7 @@ class Status(enum.Enum):
     running = "running"
     stopped = "stopped"
     failed = "failed"
-    not_deployed = "not_deployed"
-    
+    not_deployed = "not_deployed" 
 
 class Slice(Base):
     __tablename__ = "slices"

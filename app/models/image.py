@@ -16,7 +16,7 @@ class Image(Base):
     name = Column(String(100), unique=True, index=True)
     description = Column(String(255))
     path = Column(String(100))
-    status = Column(Enum(Status))
+    status = Column(Enum(Status), default=Status.descargando)
 
     nodes = relationship("Node", back_populates="image")
 
