@@ -12,10 +12,6 @@ class AvailabilityZoneBase(BaseModel):
     id: int
 
 
-class SecurityGroupBase(BaseModel):
-    name: str
-    description: str
-
 class UserCreate(UserBase):
     password: str
 
@@ -46,8 +42,38 @@ class AvailabilityZone(AvailabilityZoneBase):
     class Config:
         from_attributes = True
 
+class inBoundBase(BaseModel):
+    protocol: str
+    ports: str
+    source: str
+    description: str
+    id_security: int
+
+class inBound(inBoundBase):
+    id: int
+
+class outBoundBase(BaseModel):
+    protocol: str
+    ports: str
+    source: str
+    description: str
+    id_security: int
+
+class outBound(inBoundBase):
+    id: int
+
+class SecurityGroupBase(BaseModel):
+    name: str
+    description: str
+
 class SecurityGroup(SecurityGroupBase):
     id: int
+    inbounds: list[inBound] = []
+    outBounds: list[outBound] = []
+
+    class Config:
+        from_attributes = True
+
 
 
 # class Slice(UserBase):

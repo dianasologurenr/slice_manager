@@ -3,15 +3,17 @@ from fastapi import Depends, FastAPI
 from routers import users
 from routers import availability_zones
 from routers import security
-
+from routers import inbound
 from routers import slices
+from routers import outbound
 
 app = FastAPI()
 
 app.include_router(users.router)
 app.include_router(availability_zones.router)
 app.include_router(security.router)
-
+app.include_router(inbound.router)
+app.include_router(outbound.router)
 app.include_router(slices.router)
 
 @app.get("/")
