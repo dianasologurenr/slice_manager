@@ -1,11 +1,6 @@
 from pydantic import BaseModel
 import enum
 
-class SliceBase(BaseModel):
-    name: str
-    topology: str
-    status: str
-    creationdate: str
 
 class UserBase(BaseModel):
     name: str
@@ -22,9 +17,14 @@ class User(UserBase):
     class Config:
         from_attributes = True
 
-# class Slice(UserBase):
-#     id: int
-#     users: list[User] = []
+class SliceBase(BaseModel):
+    name: str
+    topology: str
+    status: str
 
-# class SliceCreate(UserBase):
-#     password: str
+class Slice(SliceBase):
+    id: int
+    creationdate: str
+    users: list[User] = []
+
+    
