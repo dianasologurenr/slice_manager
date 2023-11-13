@@ -13,7 +13,8 @@ class AvailabilityZoneBase(BaseModel):
 
 
 class SecurityGroupBase(BaseModel):
-    id: int
+    name: str
+    description: str
 
 class UserCreate(UserBase):
     password: str
@@ -46,12 +47,8 @@ class AvailabilityZone(AvailabilityZoneBase):
         from_attributes = True
 
 class SecurityGroup(SecurityGroupBase):
-    name: str
-    description: str
+    id: int
 
-class SecurityGroupCreate(SecurityGroupBase):
-    name: str
-    description: str
 
 # class Slice(UserBase):
 #     id: int
