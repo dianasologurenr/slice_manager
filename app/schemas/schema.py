@@ -1,11 +1,7 @@
 from pydantic import BaseModel
 import enum
+from datetime import datetime
 
-class SliceBase(BaseModel):
-    name: str
-    topology: str
-    status: str
-    creationdate: str
 
 class UserBase(BaseModel):
     name: str
@@ -14,6 +10,7 @@ class UserBase(BaseModel):
 
 class AvailabilityZoneBase(BaseModel):
     id: int
+
 
 class SecurityGroupBase(BaseModel):
     id: int
@@ -28,10 +25,25 @@ class User(UserBase):
     class Config:
         from_attributes = True
 
+class SliceBase(BaseModel):
+    id_az: int
+    name: str
+    topology: str
+
+class Slice(SliceBase):
+    id: int
+    status: str
+    creationdate: datetime
+    users: list[User] = []
+
 class AvailabilityZone(AvailabilityZoneBase):
     name: str
     latitude: float
     longitude: float
+    slices: list[Slice] = []
+
+    class Config:
+        from_attributes = True
 
 class SecurityGroup(SecurityGroupBase):
     name: str
@@ -45,5 +57,6 @@ class SecurityGroupCreate(SecurityGroupBase):
 #     id: int
 #     users: list[User] = []
 
-# class SliceCreate(UserBase):
-#     password: str
+
+
+    
