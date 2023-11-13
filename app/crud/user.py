@@ -54,10 +54,12 @@ def delete_user(db: Session, user_id: int):
     return {"message": "User deleted successfully"}
 
 def convert_sqlalchemy_user_to_pydantic(user: models_user.User) -> schema.User:
-    return schema.User(
-        id=user.id,
-        name=user.name,
-        email=user.email,
-        username=user.username,
-        role=user.role.value  # Asumiendo que 'role' es un Enum de SQLAlchemy
-    )
+    if user:
+        return schema.User(
+            id=user.id,
+            name=user.name,
+            email=user.email,
+            username=user.username,
+            role=user.role.value  # Asumiendo que 'role' es un Enum de SQLAlchemy
+        )
+    return None
