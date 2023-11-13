@@ -8,7 +8,7 @@ class Node(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100))
-    internetaccess = Column(Integer)
+    internetaccess = Column(Integer, default=1)
     id_slice = Column(Integer, ForeignKey("slices.id"))
     id_image = Column(Integer, ForeignKey("images.id"))
     id_server = Column(Integer, ForeignKey("servers.id"))

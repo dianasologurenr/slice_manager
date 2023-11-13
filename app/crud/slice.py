@@ -1,5 +1,4 @@
 from sqlalchemy.orm import Session
-
 from models import user as models_user
 from models import slice_user as models_slice_user
 from models import slice as models_slice

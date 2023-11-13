@@ -12,9 +12,6 @@ class AvailabilityZoneBase(BaseModel):
     id: int
 
 
-class SecurityGroupBase(BaseModel):
-    id: int
-
 class UserCreate(UserBase):
     password: str
 
@@ -36,6 +33,30 @@ class Slice(SliceBase):
     creationdate: datetime
     users: list[User] = []
 
+class NodeBase(BaseModel):
+    name: str
+    id_slice: int
+    id_image: int
+    id_server: int
+    id_security: int
+    id_flavor: int
+
+class Node(NodeBase):
+   id: int
+   internetaccess: int
+   users: list[User] = []
+
+class FlavorBase(BaseModel):
+   core: int
+   ram: float
+   disk: float
+
+class Flavor(FlavorBase):
+    id:int
+    users: list[User] = []
+
+
+
 class AvailabilityZone(AvailabilityZoneBase):
     name: str
     latitude: float
@@ -45,13 +66,43 @@ class AvailabilityZone(AvailabilityZoneBase):
     class Config:
         from_attributes = True
 
-class SecurityGroup(SecurityGroupBase):
+class inBoundBase(BaseModel):
+    protocol: str
+    ports: str
+    source: str
+    description: str
+    id_security: int
+
+class inBound(inBoundBase):
+    id: int
+
+class outBoundBase(BaseModel):
+    protocol: str
+    ports: str
+    source: str
+    description: str
+    id_security: int
+
+class outBound(inBoundBase):
+    id: int
+
+class SecurityGroupBase(BaseModel):
     name: str
     description: str
 
-class SecurityGroupCreate(SecurityGroupBase):
-    name: str
-    description: str
+class SecurityGroup(SecurityGroupBase):
+    id: int
+    inbounds: list[inBound] = []
+    outBounds: list[outBound] = []
+
+    class Config:
+        from_attributes = True
+
+
+
+
+
+
 
 # class Slice(UserBase):
 #     id: int

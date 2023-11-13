@@ -23,9 +23,8 @@ def get_security_groups(db: Session, skip: int = 0, limit: int = 100):
     security_groups = [convert_sqlalchemy_user_to_pydantic(db_security_group) for db_security_group in db_security_groups]
     return security_groups
 
-def create_security_groups(db: Session, security_group: schema.SecurityGroupCreate):
+def create_security_groups(db: Session, security_group: schema.SecurityGroupBase):
     db_security_groups = models_security.Security(
-            id=security_group.id,
             name=security_group.name, 
             description=security_group.description,
         )
@@ -33,6 +32,10 @@ def create_security_groups(db: Session, security_group: schema.SecurityGroupCrea
     db.commit()
     db.refresh(db_security_groups)
     return convert_sqlalchemy_user_to_pydantic(db_security_groups)
+
+def get_security_group_by_name(db: Session, name: str):
+    user = db.query(models_security.Security).filter(models_security.Security.name == name).first()
+    return user
 
 def get_security_group_by_id(db: Session, id: int):
     user = db.query(models_security.Security).filter(models_security.Security.id == id).first()
