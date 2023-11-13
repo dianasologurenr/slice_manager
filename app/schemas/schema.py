@@ -37,6 +37,19 @@ class Slice(SliceBase):
     creationdate: datetime
     users: list[User] = []
 
+class NodeBase(BaseModel):
+    name: str
+    id_slice: int
+    id_image: int
+    id_server: int
+    id_security: int
+    id_flavor: int
+
+class Node(NodeBase):
+   id: int
+   internetaccess: int
+   users: list[User] = []
+
 class AvailabilityZone(AvailabilityZoneBase):
     name: str
     latitude: float
@@ -48,6 +61,10 @@ class AvailabilityZone(AvailabilityZoneBase):
 
 class SecurityGroup(SecurityGroupBase):
     id: int
+
+
+
+
 
 
 # class Slice(UserBase):
