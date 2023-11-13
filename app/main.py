@@ -8,6 +8,7 @@ from routers import nodes
 from routers import inbound
 from routers import slices
 from routers import outbound
+from routers import flavors
 
 app = FastAPI()
 
@@ -19,6 +20,7 @@ app.include_router(nodes.router)
 app.include_router(inbound.router)
 app.include_router(outbound.router)
 app.include_router(slices.router)
+app.include_router(flavors.router)
 
 @app.get("/")
 async def root():

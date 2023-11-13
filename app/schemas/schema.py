@@ -46,6 +46,17 @@ class Node(NodeBase):
    internetaccess: int
    users: list[User] = []
 
+class FlavorBase(BaseModel):
+   core: int
+   ram: float
+   disk: float
+
+class Flavor(FlavorBase):
+    id:int
+    users: list[User] = []
+
+
+
 class AvailabilityZone(AvailabilityZoneBase):
     name: str
     latitude: float
