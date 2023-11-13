@@ -30,11 +30,11 @@ def get_slice_by_name(db: Session, name: str):
     slice = db.query(models_slice.Slice).filter(models_slice.Slice.name == name).first()
     return slice
 
-def create_slice(db: Session, slice: schema.SliceCreate):
+def create_slice(db: Session, slice: schema.SliceBase):
     db_slice = models_slice.Slice(
         name=slice.name,
-        status=slice.status,
-        creationdate=slice.creationdate
+        id_az=slice.id_az,
+        topology=slice.topology
         )
     db.add(db_slice)
     db.commit()
@@ -49,9 +49,13 @@ def delete_slice(db: Session, slice_id: int):
 
 
 def convert_sqlalchemy_slice_to_pydantic(slice: models_slice.Slice) -> schema.Slice:
-    return schema.Slice(
-        id=slice.id,
-        name=slice.name,
-        status=slice.status,
-        creationdate=slice.creationdate
-    )
+    if slice: 
+        return schema.Slice(
+            id=slice.id,
+            name=slice.name,
+            topology=slice.topology.value,
+            status=slice.status.value,
+            creationdate=slice.creationdate,
+            id_az=slice.id_az
+        )
+    return None

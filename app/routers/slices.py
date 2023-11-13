@@ -4,8 +4,6 @@ from crud import slice as crud_slice
 import schemas.schema as schema
 from typing import List
 
-from schemas import schemas_slices
-
 router = APIRouter(
     prefix="/slices",
     tags=["slices"],
@@ -25,7 +23,7 @@ async def read_slice(id: int, db=Depends(get_db)):
     return db_slice
 
 @router.post("/", response_model=schema.Slice)
-async def create_slice(slice: schema.SliceCreate, db=Depends(get_db)):
+async def create_slice(slice: schema.SliceBase, db=Depends(get_db)):
     db_slice = crud_slice.get_slice_by_name(db,name=slice.name)
     if db_slice:
         raise HTTPException(status_code=40, detail="There is already a slice with that name")

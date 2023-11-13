@@ -5,17 +5,17 @@ import enum
 from datetime import datetime
 
 class Topology(enum.Enum):
-    arbol = "arbol",
-    malla = "malla",
-    bus = "bus",
-    lineal = "lineal",
+    arbol = "arbol"
+    malla = "malla"
+    bus = "bus"
+    lineal = "lineal"
     anillo = "anillo"
     custom = "custom"
 
 class Status(enum.Enum):
     creating = "creating"
-    running = "running",
-    stopped = "stopped",
+    running = "running"
+    stopped = "stopped"
     failed = "failed"
     not_deployed = "not_deployed"
     
