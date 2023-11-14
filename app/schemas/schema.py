@@ -121,3 +121,17 @@ class Image(BaseModel):
     path: str
     status: str
 
+
+class ServerBase(BaseModel):
+    core: int
+    ram: float
+    disk: float
+    ip: str
+    id_az: int
+
+class Server(ServerBase):
+    id: int
+    usage: float
+
+    class Config:
+        from_attributes = True
