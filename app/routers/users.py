@@ -26,7 +26,7 @@ async def read_user(id: int, db=Depends(get_db)):
 async def create_user(user: schema.UserCreate, db=Depends(get_db)):
     db_user = crud_user.get_user_by_email(db,email=user.email)
     if db_user:
-        raise HTTPException(status_code=40, detail="Email already registered")
+        raise HTTPException(status_code=400, detail="Email already registered")
     temp = crud_user.get_user_by_username(db,username=user.username)
     if temp:
         raise HTTPException(status_code=400, detail="Username already registered")

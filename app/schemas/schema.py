@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel
 import enum
 from datetime import datetime
@@ -114,12 +115,16 @@ class SecurityGroup(SecurityGroupBase):
 
 class ImageBase(BaseModel):
     name: str
-    description: str
+    description: Optional[str]=None
 
-class Image(BaseModel):
+class Image(ImageBase):
     id: int
     path: str
     status: str
+class ImageUpdate(BaseModel):
+    status: Optional[str]=None
+    path: Optional[str]=None
+
 
 
 class ServerBase(BaseModel):

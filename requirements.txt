@@ -1,5 +1,6 @@
 certifi==2023.7.22
 charset-normalizer==2.1.1
+cryptography==41.0.5
 fastapi==0.104.1
 greenlet==3.0.1
 idna==3.4

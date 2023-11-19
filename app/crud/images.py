@@ -40,6 +40,20 @@ def create_image(db: Session, image: schema.ImageBase):
     db.refresh(db_image)
     return convert_sqlalchemy_to_pydantic(db_image)
 
+def update_image(db: Session, id: int, image: schema.ImageUpdate):
+    db_image = db.query(models_image.Image).filter(models_image.Image.id == id).first()
+    
+    image_data = image.dict(exclude_unset=True)
+
+    for key, value in image_data.items():
+        setattr(db_image, key, value)
+
+    db.add(db_image)
+    db.commit()
+    db.refresh(db_image)
+    return convert_sqlalchemy_to_pydantic(db_image)
+
+    
 def delete_image(db: Session, id: int):
     db_image = db.query(models_image.Image).filter(models_image.Image.id == id).first()
     db.delete(db_image)
