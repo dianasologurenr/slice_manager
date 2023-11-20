@@ -22,6 +22,19 @@ def get_outbound(db: Session, skip: int = 0, limit: int = 100):
     outbounds = [convert_sqlalchemy_outbound_to_pydantic(db_outbound) for db_outbound in db_outbounds]
     return outbounds
 
+def convert_sqlalchemy_outbound_to_pydantic(outbound: models_outbound.Outbound) -> schema.outBound:
+    if outbound: 
+        return schema.outBound(
+            id=outbound.id,
+            protocol=outbound.protocol.value,
+            ports=outbound.ports,
+            source=outbound.source,
+            description=outbound.description,
+            id_security=outbound.id_security,
+            security_name=outbound.security.name  
+        )
+    return None
+
 
 def create_outbound(db: Session, outbound: schema.outBoundBase):
     db_outbound = models_outbound.Outbound(
@@ -51,15 +64,4 @@ def delete_outbound(db: Session, outbound_id: int):
     db.commit()
     return {"message": "Outbound deleted successfully"}
 
-def convert_sqlalchemy_outbound_to_pydantic(outbound: models_outbound.Outbound) -> schema.outBound:
-    if outbound: 
-        return schema.outBound(
-            id=outbound.id,
-            protocol=outbound.protocol.value,
-            ports=outbound.ports,
-            source=outbound.source,
-            description=outbound.description,
-            id_security=outbound.id_security
-        )
-    return None
 

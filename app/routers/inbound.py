@@ -10,10 +10,13 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-@router.get("/",response_model=List[schema.inBound])
+@router.get("/", response_model=List[schema.inBound])
 async def read_inbounds(skip: int = 0, limit: int = 100, db=Depends(get_db)):
-    inbound = crud_inbound.get_inbound(db, skip=skip, limit=limit)
-    return inbound
+    try:
+        inbounds = crud_inbound.get_inbound(db, skip=skip, limit=limit)
+        return inbounds
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/{id}",response_model=List[schema.inBound])
 async def read_inboundsPerSecurityGroup(id: int , skip: int = 0, limit: int = 100, db=Depends(get_db)):

@@ -15,6 +15,11 @@ async def read_nodes(skip: int = 0, limit: int = 100, db=Depends(get_db)):
     nodes = crud_node.get_nodes(db, skip=skip, limit=limit)
     return nodes
 
+@router.get("/slice/{id}",response_model=List[schema.Node])
+async def read_nodes(id: int,skip: int = 0, limit: int = 100, db=Depends(get_db)):
+    nodes = crud_node.get_node_by_slice(db,slice_id=id, skip=skip, limit=limit)
+    return nodes
+
 @router.get("/{id}",response_model=schema.Node)
 async def read_node(id: int, db=Depends(get_db)):
     db_node = crud_node.get_node(db, node_id=id)

@@ -15,18 +15,23 @@ async def read_users(skip: int = 0, limit: int = 100, db=Depends(get_db)):
     users = crud_user.get_users(db, skip=skip, limit=limit)
     return users
 
-@router.get("/{id}",response_model=schema.User)
+@router.get("/{id}/",response_model=schema.User)
 async def read_user(id: int, db=Depends(get_db)):
     db_user = crud_user.get_user(db, user_id=id)
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
 
+@router.get("/role/{role}/",response_model=List[schema.User])
+async def read_users_by_role(role:str, skip: int = 0, limit: int = 100, db=Depends(get_db)):
+    users = crud_user.get_users_by_rol(db, role=role, skip=skip, limit=limit)
+    return users
+
 @router.post("/", response_model=schema.User)
 async def create_user(user: schema.UserCreate, db=Depends(get_db)):
     db_user = crud_user.get_user_by_email(db,email=user.email)
     if db_user:
-        raise HTTPException(status_code=40, detail="Email already registered")
+        raise HTTPException(status_code=400, detail="Email already registered")
     temp = crud_user.get_user_by_username(db,username=user.username)
     if temp:
         raise HTTPException(status_code=400, detail="Username already registered")

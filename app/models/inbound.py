@@ -15,7 +15,7 @@ class Inbound(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     protocol = Column(Enum(Protocol))
-    ports = Column(String(45))
+    ports = Column(String(45), default="0-65535")
     source = Column(String(20))
     description = Column(String(255))
     id_security = Column(Integer, ForeignKey('security.id')) 

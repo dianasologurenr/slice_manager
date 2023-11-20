@@ -38,8 +38,8 @@ def get_security_group_by_name(db: Session, name: str):
     return user
 
 def get_security_group_by_id(db: Session, id: int):
-    user = db.query(models_security.Security).filter(models_security.Security.id == id).first()
-    return user
+    sg = db.query(models_security.Security).filter(models_security.Security.id == id).first()
+    return convert_sqlalchemy_user_to_pydantic(sg)
 
 def delete_security_groups(db: Session, security_group_id: int):
     db_security_groups = db.query(models_security.Security).filter(models_security.Security.id == security_group_id).first()
@@ -49,8 +49,39 @@ def delete_security_groups(db: Session, security_group_id: int):
 
 
 def convert_sqlalchemy_user_to_pydantic(security_group: models_security.Security) -> schema.SecurityGroup:
+    
+    inbounds = []
+    for rule in security_group.inbound:
+        inbounds.append(
+            schema.inBound(
+                id=rule.id,
+                description=rule.description,
+                protocol=rule.protocol.value,
+                ports=rule.ports,
+                source=rule.source,
+                id_security=security_group.id,
+                security_name=security_group.name
+            )
+        )
+
+    outbounds = []
+    for rule in security_group.outbound:
+        outbounds.append(
+            schema.outBound(
+                id=rule.id,
+                description=rule.description,
+                protocol=rule.protocol.value,
+                ports=rule.ports,
+                source=rule.source,
+                id_security=security_group.id,
+                security_name=security_group.name
+            )
+        )
+
     return schema.SecurityGroup(
         id = security_group.id,
         name = security_group.name,
         description = security_group.description,
+        inbounds= inbounds,
+        outBounds= outbounds
     )

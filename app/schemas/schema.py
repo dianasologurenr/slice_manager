@@ -1,6 +1,8 @@
+from typing import Optional
 from pydantic import BaseModel
 import enum
 from datetime import datetime
+
 
 
 class UserBase(BaseModel):
@@ -31,20 +33,24 @@ class Slice(SliceBase):
     id: int
     status: str
     creationdate: datetime
+    az: str
+    nodes: int
+
     users: list[User] = []
+
+
+    class Config:
+        from_attributes = True
 
 class NodeBase(BaseModel):
     name: str
+    internetaccess: int = 0
     id_slice: int
     id_image: int
     id_server: int
     id_security: int
     id_flavor: int
 
-class Node(NodeBase):
-   id: int
-   internetaccess: int
-   users: list[User] = []
 
 class FlavorBase(BaseModel):
    core: int
@@ -53,7 +59,6 @@ class FlavorBase(BaseModel):
 
 class Flavor(FlavorBase):
     id:int
-    users: list[User] = []
 
 
 
@@ -72,6 +77,7 @@ class inBoundBase(BaseModel):
     source: str
     description: str
     id_security: int
+    security_name: Optional[str]
 
 class inBound(inBoundBase):
     id: int
@@ -82,6 +88,7 @@ class outBoundBase(BaseModel):
     source: str
     description: str
     id_security: int
+    security_name: Optional[str]
 
 class outBound(inBoundBase):
     id: int
@@ -110,4 +117,43 @@ class SecurityGroup(SecurityGroupBase):
 
 
 
-    
+
+
+class ImageBase(BaseModel):
+    name: str
+    description: Optional[str]=None
+
+class Image(ImageBase):
+    id: int
+    path: str
+    status: str
+class ImageUpdate(BaseModel):
+    status: Optional[str]=None
+    path: Optional[str]=None
+
+
+
+class ServerBase(BaseModel):
+    core: int
+    ram: float
+    disk: float
+    ip: str
+    id_az: int
+
+class Server(ServerBase):
+    id: int
+    usage: float
+
+    class Config:
+        from_attributes = True
+
+
+class Node(NodeBase):
+    id: int
+    image: str
+    flavor: Flavor
+    server: str
+    security: str
+
+    class Config:
+        from_attributes = True
