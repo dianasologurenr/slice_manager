@@ -4,6 +4,7 @@ import enum
 from datetime import datetime
 
 
+
 class UserBase(BaseModel):
     name: str
     email: str
@@ -32,20 +33,24 @@ class Slice(SliceBase):
     id: int
     status: str
     creationdate: datetime
+    az: str
+    nodes: int
+
     users: list[User] = []
+
+
+    class Config:
+        from_attributes = True
 
 class NodeBase(BaseModel):
     name: str
+    internetaccess: int = 0
     id_slice: int
     id_image: int
     id_server: int
     id_security: int
     id_flavor: int
 
-class Node(NodeBase):
-   id: int
-   internetaccess: int
-   users: list[User] = []
 
 class FlavorBase(BaseModel):
    core: int
@@ -54,7 +59,6 @@ class FlavorBase(BaseModel):
 
 class Flavor(FlavorBase):
     id:int
-    users: list[User] = []
 
 
 
@@ -139,6 +143,17 @@ class ServerBase(BaseModel):
 class Server(ServerBase):
     id: int
     usage: float
+
+    class Config:
+        from_attributes = True
+
+
+class Node(NodeBase):
+    id: int
+    image: str
+    flavor: Flavor
+    server: str
+    security: str
 
     class Config:
         from_attributes = True

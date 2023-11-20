@@ -26,6 +26,11 @@ def get_user(db: Session, user_id: int):
     user = db.query(models_user.User).filter(models_user.User.id == user_id).first()
     return convert_sqlalchemy_user_to_pydantic(user)
 
+def get_users_by_rol(db: Session, role: str,skip: int = 0, limit: int = 100):
+    db_users = db.query(models_user.User).filter(models_user.User.role == role).offset(skip).limit(limit).all()
+    users = [convert_sqlalchemy_user_to_pydantic(db_user) for db_user in db_users]
+    return users
+
 def get_user_by_email(db: Session, email: str):
     user = db.query(models_user.User).filter(models_user.User.email == email).first()
     return user
