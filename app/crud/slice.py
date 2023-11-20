@@ -31,9 +31,7 @@ def get_slice_by_name(db: Session, name: str):
 
 def create_slice(db: Session, slice: schema.SliceBase):
     db_slice = models_slice.Slice(
-        name=slice.name,
-        id_az=slice.id_az,
-        topology=slice.topology
+        name=slice.name
         )
     db.add(db_slice)
     db.commit()

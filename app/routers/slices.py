@@ -26,7 +26,7 @@ async def read_slice(id: int, db=Depends(get_db)):
 async def create_slice(slice: schema.SliceBase, db=Depends(get_db)):
     db_slice = crud_slice.get_slice_by_name(db,name=slice.name)
     if db_slice:
-        raise HTTPException(status_code=40, detail="There is already a slice with that name")
+        raise HTTPException(status_code=400, detail="There is already a slice with that name")
     return crud_slice.create_slice(db=db, slice=slice)
 
 @router.delete("/{id}")
