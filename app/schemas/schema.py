@@ -25,15 +25,17 @@ class User(UserBase):
         from_attributes = True
 
 class SliceBase(BaseModel):
-    id_az: int
+    
     name: str
-    topology: str
+    
 
 class Slice(SliceBase):
     id: int
-    status: str
+    topology: Optional[str] = None
+    status: Optional[str] = None
     creationdate: datetime
-    az: str
+    id_az: Optional[int] = None
+    az: Optional[str] = None
     nodes: int
 
     users: list[User] = []

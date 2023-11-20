@@ -52,10 +52,10 @@ def convert_sqlalchemy_slice_to_pydantic(slice: models_slice.Slice) -> schema.Sl
         return schema.Slice(
             id=slice.id,
             name=slice.name,
-            topology=slice.topology.value,
-            status=slice.status.value,
+            topology=slice.topology.value if slice.topology else None,
+            status=slice.status.value if slice.status else None,
             creationdate=slice.creationdate,
-            az=slice.az.name,
+            az=slice.az.name if slice.az else None,
             nodes=len(slice.nodes),
             id_az=slice.id_az
         )
