@@ -73,6 +73,7 @@ class inBoundBase(BaseModel):
     source: str
     description: str
     id_security: int
+    security_name: Optional[str]
 
 class inBound(inBoundBase):
     id: int
@@ -83,6 +84,7 @@ class outBoundBase(BaseModel):
     source: str
     description: str
     id_security: int
+    security_name: Optional[str]
 
 class outBound(inBoundBase):
     id: int

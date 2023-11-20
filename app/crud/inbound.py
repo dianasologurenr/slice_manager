@@ -22,6 +22,19 @@ def get_inbound(db: Session, skip: int = 0, limit: int = 100):
     inbounds = [convert_sqlalchemy_inbound_to_pydantic(db_inbound) for db_inbound in db_inbounds]
     return inbounds
 
+def convert_sqlalchemy_inbound_to_pydantic(inbound: models_inbound.Inbound) -> schema.inBound:
+    if inbound: 
+        return schema.inBound(
+            id=inbound.id,
+            protocol=inbound.protocol.value,
+            ports=inbound.ports,
+            source=inbound.source,
+            description=inbound.description,
+            id_security=inbound.id_security,
+            security_name=inbound.security.name  
+        )
+    return None
+
 def create_inbound(db: Session, inbound: schema.inBoundBase):
     db_inbound = models_inbound.Inbound(
             protocol = inbound.protocol,
@@ -49,15 +62,3 @@ def delete_inbound(db: Session, inbound_id: int):
     db.delete(db_inbound)
     db.commit()
     return {"message": "Inbound deleted successfully"}
-
-def convert_sqlalchemy_inbound_to_pydantic(inbound: models_inbound.Inbound) -> schema.inBound:
-    if inbound: 
-        return schema.inBound(
-            id=inbound.id,
-            protocol=inbound.protocol.value,
-            ports=inbound.ports,
-            source=inbound.source,
-            description=inbound.description,
-            id_security=inbound.id_security
-        )
-    return None
