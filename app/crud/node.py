@@ -21,7 +21,7 @@ def get_nodes(db: Session, skip: int = 0, limit: int = 100):
     nodes = [convert_sqlalchemy_node_to_pydantic(db_node) for db_node in db_nodes]
     return nodes
 
-def get_node_by_slice(db: Session, slice_id: int, skip: int = 0, limit: int = 100):
+def get_nodes_by_slice(db: Session, slice_id: int, skip: int = 0, limit: int = 100):
     db_nodes = db.query(models_node.Node).filter(models_node.Node.id_slice == slice_id).offset(skip).limit(limit).all()
     nodes = [convert_sqlalchemy_node_to_pydantic(db_node) for db_node in db_nodes]
     return nodes
@@ -31,18 +31,14 @@ def get_node(db: Session, node_id: int):
     return convert_sqlalchemy_node_to_pydantic(node)
 
 
-def get_node_by_name(db: Session, name: str):
-    node = db.query(models_node.Node).filter(models_node.Node.name == name).first()
+def get_node_by_name_in_slice(db: Session, name: str, id_slice: int):
+    node = db.query(models_node.Node).filter(models_node.Node.id_slice==id_slice, models_node.Node.name == name).first()
     return node
 
 def create_node(db: Session, node: schema.NodeBase):
     db_node = models_node.Node(
         name=node.name,
         id_slice = node.id_slice,
-        id_image = node.id_image,
-        id_server = node.id_server,
-        id_security = node.id_security,
-        id_flavor = node.id_flavor
         )
     db.add(db_node)
     db.commit()
@@ -67,14 +63,20 @@ def convert_sqlalchemy_node_to_pydantic(node: models_node.Node) -> schema.Node:
             id_server=node.id_server,
             id_security=node.id_security,
             id_flavor=node.id_flavor,
-            image= node.image.name,
+            image= node.image.name if node.image else None,
             flavor= schema.Flavor(
                 id=node.flavor.id,
                 core=node.flavor.core,
                 ram=node.flavor.ram,
                 disk=node.flavor.disk
-            ),
-            server= node.server.ip,
-            security= node.security.name,
+            ) if node.flavor else None,
+            server= node.server.ip if node.server else None,
+            security= node.security.name if node.security else None,
+            ports=[schema.Port(
+                    id=port.id,
+                    name=port.name,
+                    id_node=port.id_node,
+                ) for port in node.ports
+            ] if node.ports else []
         )
     return None
