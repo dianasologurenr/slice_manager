@@ -25,7 +25,6 @@ class User(UserBase):
         from_attributes = True
 
 class SliceBase(BaseModel):
-    
     name: str
     
 
@@ -40,12 +39,20 @@ class Slice(SliceBase):
 
     users: list[User] = []
 
-
     class Config:
         from_attributes = True
 
 class NodeBase(BaseModel):
     name: str
+    id_slice: int
+
+class PortBase(BaseModel):
+    name: str
+    id_node: int
+
+class LinkBase(BaseModel):
+    id_port0: int
+    id_port1: int
 
 class FlavorBase(BaseModel):
    core: int
@@ -126,7 +133,10 @@ class ImageUpdate(BaseModel):
     status: Optional[str]=None
     path: Optional[str]=None
 
-
+class SliceUpdate(BaseModel):
+    topology: Optional[str] = None
+    status: Optional[str] = None
+    id_az: Optional[int] = None
 
 class ServerBase(BaseModel):
     core: int
@@ -142,18 +152,33 @@ class Server(ServerBase):
     class Config:
         from_attributes = True
 
+class Port(PortBase):
+    id: int
 
+    class Config:
+        from_attributes = True
 class Node(NodeBase):
     id: int
-    image: str
-    flavor: Flavor
-    server: str
-    security: str
-    internetaccess: int = 0
-    id_slice: Optional[int]
-    id_image: Optional[int]
-    id_server: Optional[int]
-    id_security: Optional[int]
-    id_flavor: Optional[int]
+    internetaccess: Optional[int] = None
+    id_image: Optional[int] = None
+    id_server: Optional[int] = None
+    id_security: Optional[int] = None
+    id_flavor: Optional[int] = None
+
+    image: Optional[str] = None
+    flavor: Optional[Flavor] = None
+    server: Optional[str] = None
+    security: Optional[str] = None
+
+    ports: list[Port] = []
+
+    class Config:
+        from_attributes = True
+
+
+
+class Link(LinkBase):
+    id: int
+
     class Config:
         from_attributes = True

@@ -17,7 +17,7 @@ async def read_nodes(skip: int = 0, limit: int = 100, db=Depends(get_db)):
 
 @router.get("/slice/{id}",response_model=List[schema.Node])
 async def read_nodes(id: int,skip: int = 0, limit: int = 100, db=Depends(get_db)):
-    nodes = crud_node.get_node_by_slice(db,slice_id=id, skip=skip, limit=limit)
+    nodes = crud_node.get_nodes_by_slice(db,slice_id=id, skip=skip, limit=limit)
     return nodes
 
 @router.get("/{id}",response_model=schema.Node)
@@ -29,9 +29,9 @@ async def read_node(id: int, db=Depends(get_db)):
 
 @router.post("/", response_model=schema.Node)
 async def create_node(node: schema.NodeBase, db=Depends(get_db)):
-    db_node = crud_node.get_node_by_name(db,name=node.name)
+    db_node = crud_node.get_node_by_name_in_slice(db,name=node.name,id_slice=node.id_slice)
     if db_node:
-        raise HTTPException(status_code=40, detail="There is already a node with that name")
+        raise HTTPException(status_code=400, detail="There is already a node with that name in the slice")
     return crud_node.create_node(db=db, node=node)
 
 @router.delete("/{id}")

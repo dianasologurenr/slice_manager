@@ -38,6 +38,19 @@ def create_slice(db: Session, slice: schema.SliceBase):
     db.refresh(db_slice)
     return convert_sqlalchemy_slice_to_pydantic(db_slice)
 
+def update_slice(db: Session, id: int, slice: schema.SliceUpdate):
+    db_slice = db.query(models_slice.Slice).filter(models_slice.Slice.id == id).first()
+    
+    slice_data = slice.dict(exclude_unset=True)
+
+    for key, value in slice_data.items():
+        setattr(db_slice, key, value)
+
+    db.add(db_slice)
+    db.commit()
+    db.refresh(db_slice)
+    return convert_sqlalchemy_slice_to_pydantic(db_slice)
+
 def delete_slice(db: Session, slice_id: int):
     db_slice = db.query(models_slice.Slice).filter(models_slice.Slice.id == slice_id).first()
     db.delete(db_slice)
