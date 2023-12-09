@@ -79,10 +79,15 @@ class inBoundBase(BaseModel):
     source: str
     description: str
     id_security: int
-    security_name: Optional[str]
+    
 
 class inBound(inBoundBase):
     id: int
+    security_name: Optional[str]
+
+    class Config:
+        from_attributes = True
+
 
 class outBoundBase(BaseModel):
     protocol: str
@@ -90,10 +95,13 @@ class outBoundBase(BaseModel):
     source: str
     description: str
     id_security: int
-    security_name: Optional[str]
 
 class outBound(inBoundBase):
     id: int
+    security_name: Optional[str]
+    
+    class Config:
+        from_attributes = True
 
 class SecurityGroupBase(BaseModel):
     name: str
@@ -102,23 +110,10 @@ class SecurityGroupBase(BaseModel):
 class SecurityGroup(SecurityGroupBase):
     id: int
     inbounds: list[inBound] = []
-    outBounds: list[outBound] = []
+    outbounds: list[outBound] = []
 
     class Config:
         from_attributes = True
-
-
-
-
-
-
-
-# class Slice(UserBase):
-#     id: int
-#     users: list[User] = []
-
-
-
 
 
 class ImageBase(BaseModel):
@@ -175,10 +170,24 @@ class Node(NodeBase):
     class Config:
         from_attributes = True
 
-
+class NodeUpdate(BaseModel):
+    internetaccess: Optional[int] = None
+    id_image: Optional[int] = None
+    id_server: Optional[int] = None
+    id_security: Optional[int] = None
+    id_flavor: Optional[int] = None
 
 class Link(LinkBase):
     id: int
+
+    class Config:
+        from_attributes = True
+
+class SliceUserBase(BaseModel):
+    id_slice: int
+    id_user: int
+
+class SliceUser(SliceUserBase):
 
     class Config:
         from_attributes = True

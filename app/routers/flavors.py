@@ -19,22 +19,16 @@ async def read_flavors(skip: int = 0, limit: int = 100, db=Depends(get_db)):
 async def read_flavor(id: int, db=Depends(get_db)):
     db_flavor = crud_flavor.get_flavor(db, flavor_id=id)
     if db_flavor is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Flavor not found")
     return db_flavor
 
-"""@router.post("/", response_model=schema.User)
-async def create_user(user: schema.UserCreate, db=Depends(get_db)):
-    db_user = crud_user.get_user_by_email(db,email=user.email)
-    if db_user:
-        raise HTTPException(status_code=40, detail="Email already registered")
-    temp = crud_user.get_user_by_username(db,username=user.username)
-    if temp:
-        raise HTTPException(status_code=400, detail="Username already registered")
-    return crud_user.create_user(db=db, user=user)"""
+@router.post("/", response_model=schema.Flavor)
+async def create_flavor(flavor: schema.FlavorBase, db=Depends(get_db)):
+    return crud_flavor.create_flavor(db=db, flavor=flavor)
 
-@router.delete("/{id}")
-async def delete_user(id: str,db=Depends(get_db)):
-    db_flavor = crud_flavor.get_flavor(db, flavor_id=id)
-    if db_flavor is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return crud_flavor.delete_flavor(db=db, flavor_id=id)
+# @router.delete("/{id}")
+# async def delete_user(id: str,db=Depends(get_db)):
+#     db_flavor = crud_flavor.get_flavor(db, flavor_id=id)
+#     if db_flavor is None:
+#         raise HTTPException(status_code=404, detail="User not found")
+#     return crud_flavor.delete_flavor(db=db, flavor_id=id)

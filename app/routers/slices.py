@@ -2,11 +2,11 @@ import json
 from dependencies import get_db
 from fastapi import APIRouter, Body, Depends, Form, HTTPException
 from crud import slice as crud_slice
+from crud import user as crud_user
+from crud import slice_user as crud_slice_user
 from crud import node as crud_node
 from crud import port as crud_port
 from crud import link as crud_link
-
-
 
 import schemas.schema as schema
 from typing import List, Optional
@@ -106,3 +106,17 @@ async def delete_slice(id: str,db=Depends(get_db)):
     if db_slice is None:
         raise HTTPException(status_code=404, detail="Slice not found")
     return crud_slice.delete_slice(db=db, slice_id=id)
+
+@router.post("/users/", response_model=schema.SliceUser)
+async def create_slice_user(slice_user: schema.SliceUserBase, db=Depends(get_db)):
+    db_slice_user = crud_slice_user.get_slice_user(db=db, slice_user=slice_user)
+    if db_slice_user:
+        raise HTTPException(status_code=400, detail="There user is already assigned to this slice")
+    return crud_slice_user.create_slice_user(db=db, slice_user=slice_user)
+
+@router.delete("/users/")
+async def delete_slice(slice_user: schema.SliceUserBase,db=Depends(get_db)):
+    db_slice_user = crud_slice_user.get_slice_user(db=db, slice_user=slice_user)
+    if db_slice_user is None:
+        raise HTTPException(status_code=404, detail="User not found in slice")
+    return crud_slice_user.delete_slice_user(db=db, slice_user=slice_user)

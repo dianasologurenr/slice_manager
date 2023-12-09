@@ -68,6 +68,13 @@ def convert_sqlalchemy_slice_to_pydantic(slice: models_slice.Slice) -> schema.Sl
             creationdate=slice.creationdate,
             az=slice.az.name if slice.az else None,
             nodes=len(slice.nodes),
-            id_az=slice.id_az
+            id_az=slice.id_az,
+            users=[schema.User(
+                name=su.user.name,
+                email=su.user.email,
+                username=su.user.username,
+                id= su.user.id,             
+                role=su.user.role.value if su.user.role else None
+            ) for su in slice.users] if slice.users else []
         )
     return None

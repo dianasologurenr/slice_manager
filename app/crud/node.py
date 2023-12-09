@@ -18,17 +18,17 @@ from schemas import schema
 
 def get_nodes(db: Session, skip: int = 0, limit: int = 100):
     db_nodes = db.query(models_node.Node).offset(skip).limit(limit).all()
-    nodes = [convert_sqlalchemy_node_to_pydantic(db_node) for db_node in db_nodes]
+    nodes = [convert_sqlalchemy_to_pydantic(db_node) for db_node in db_nodes]
     return nodes
 
 def get_nodes_by_slice(db: Session, slice_id: int, skip: int = 0, limit: int = 100):
     db_nodes = db.query(models_node.Node).filter(models_node.Node.id_slice == slice_id).offset(skip).limit(limit).all()
-    nodes = [convert_sqlalchemy_node_to_pydantic(db_node) for db_node in db_nodes]
+    nodes = [convert_sqlalchemy_to_pydantic(db_node) for db_node in db_nodes]
     return nodes
 
-def get_node(db: Session, node_id: int):
-    node = db.query(models_node.Node).filter(models_node.Node.id == node_id).first()
-    return convert_sqlalchemy_node_to_pydantic(node)
+def get_node(db: Session, id: int):
+    node = db.query(models_node.Node).filter(models_node.Node.id == id).first()
+    return convert_sqlalchemy_to_pydantic(node)
 
 
 def get_node_by_name_in_slice(db: Session, name: str, id_slice: int):
@@ -43,7 +43,20 @@ def create_node(db: Session, node: schema.NodeBase):
     db.add(db_node)
     db.commit()
     db.refresh(db_node)
-    return convert_sqlalchemy_node_to_pydantic(db_node)
+    return convert_sqlalchemy_to_pydantic(db_node)
+
+def update_node(db: Session, id: int, node: schema.NodeUpdate):
+    db_node = db.query(models_node.Node).filter(models_node.Node.id == id).first()
+    
+    node_data = node.dict(exclude_unset=True)
+
+    for key, value in node_data.items():
+        setattr(db_node, key, value)
+
+    db.add(db_node)
+    db.commit()
+    db.refresh(db_node)
+    return convert_sqlalchemy_to_pydantic(db_node)
 
 def delete_node(db: Session, node_id: int):
     db_node = db.query(models_node.Node).filter(models_node.Node.id == node_id).first()
@@ -52,7 +65,7 @@ def delete_node(db: Session, node_id: int):
     return {"message": "Node deleted successfully"}
 
 
-def convert_sqlalchemy_node_to_pydantic(node: models_node.Node) -> schema.Node:
+def convert_sqlalchemy_to_pydantic(node: models_node.Node) -> schema.Node:
     if node:
         return schema.Node(
             id=node.id,

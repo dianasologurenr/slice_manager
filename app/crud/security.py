@@ -83,5 +83,5 @@ def convert_sqlalchemy_user_to_pydantic(security_group: models_security.Security
         name = security_group.name,
         description = security_group.description,
         inbounds= inbounds,
-        outBounds= outbounds
+        outbounds= outbounds
     )
