@@ -46,13 +46,6 @@ class Slice(SliceBase):
 
 class NodeBase(BaseModel):
     name: str
-    internetaccess: int = 0
-    id_slice: int
-    id_image: int
-    id_server: int
-    id_security: int
-    id_flavor: int
-
 
 class FlavorBase(BaseModel):
    core: int
@@ -156,6 +149,11 @@ class Node(NodeBase):
     flavor: Flavor
     server: str
     security: str
-
+    internetaccess: int = 0
+    id_slice: Optional[int]
+    id_image: Optional[int]
+    id_server: Optional[int]
+    id_security: Optional[int]
+    id_flavor: Optional[int]
     class Config:
         from_attributes = True
