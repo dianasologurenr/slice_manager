@@ -4,10 +4,13 @@ from fastapi import APIRouter, Body, Depends, Form, HTTPException
 from crud import slice as crud_slice
 from crud import user as crud_user
 from crud import slice_user as crud_slice_user
+from crud import flavor as crud_flavor
 from crud import node as crud_node
 from crud import port as crud_port
 from crud import link as crud_link
+from crud import availability_zone as az
 from services import funciones as openstack
+from services import vmplacement
 from config import GATEWAY_IP, ADMIN_PASSWORD, ADMIN_PROJECT_NAME, ADMIN_DOMAIN_NAME,DOMAIN_ID,ADMIN_USERNAME,ADMIN_ID,ADMIN,READER,MEMBER,IP_VERSION, CIDR
 
 
@@ -103,6 +106,24 @@ async def desplegar_slice(id: int, db=Depends(get_db)):
         
 
         return {}
+
+
+        ##zona disponibilidad
+        db_availability_zone = db_slice.id_az
+        if db_availability_zone == 1:
+            db_availability_zone = 'Worker1'
+        elif db_availability_zone == 2:
+            db_availability_zone = 'Worker2'
+        elif db_availability_zone == 3:
+            db_availability_zone = 'Worker3'
+
+        flavors = crud_flavor.get_flavors_by_id_slice(db,slice_id=id)
+
+        zona_disponibilidad = vmplacement.elegir_zonaDisponibilidad(flavors,db_availability_zone)
+        print("La zona disponibilidad es: "+zona_disponibilidad)
+        
+        
+
     else:
         print('No se pudo obtener el token.')
     return{}
