@@ -11,7 +11,7 @@ from crud import link as crud_link
 from crud import availability_zone as az
 from services import funciones as openstack
 from services import vmplacement
-from config import GATEWAY_IP, ADMIN_PASSWORD, ADMIN_PROJECT_NAME, ADMIN_DOMAIN_NAME,DOMAIN_ID,ADMIN_USERNAME
+from config import GATEWAY_IP, ADMIN_PASSWORD, ADMIN_PROJECT_NAME, ADMIN_DOMAIN_NAME,DOMAIN_ID,ADMIN_USERNAME,ADMIN_ID,ADMIN,READER,MEMBER,IP_VERSION, CIDR
 
 
 
@@ -51,14 +51,61 @@ async def desplegar_slice(id: int, db=Depends(get_db)):
     print("desplegado")
 
 #0.- Validar el espacio (monitoreo) obtener id_az que viene con id_slice y luego nombre 
-#1.- Obtener token
-#2.- Crear el proyecto
+#1.- Obtener token 
     project_name = db_slice.name
     project_description = "-"
-    project_token = openstack.obtenerTokenAdmin(GATEWAY_IP,ADMIN_PASSWORD,ADMIN_USERNAME,ADMIN_DOMAIN_NAME,DOMAIN_ID,ADMIN_PROJECT_NAME) 
-    if project_token:
-        openstack.crearProyecto(GATEWAY_IP,project_token, DOMAIN_ID, project_name, project_description)
-        print('Exitoso')
+    admin_token = openstack.obtenerTokenAdmin(GATEWAY_IP,ADMIN_PASSWORD,ADMIN_USERNAME,ADMIN_DOMAIN_NAME,DOMAIN_ID,ADMIN_PROJECT_NAME) 
+    if admin_token:
+        #2.- Crear el proyecto
+
+        project = openstack.crearProyecto(GATEWAY_IP, admin_token, DOMAIN_ID, project_name, project_description)
+        project_id = project["project"]["id"]
+        openstack.asignarRol(GATEWAY_IP, admin_token, project_id, ADMIN_ID, ADMIN)
+        #3.- Token del proyecto 
+            #3.1.-Asignar rol admin al usuario admin
+            #3.2.-Crear usuario y asignar rol al usuario (rol reader) --pendiente--
+        project_token = openstack.obtenerTokenProject(GATEWAY_IP, admin_token, DOMAIN_ID, project_name)
+        print(project_token)
+        #4.- Creacion de network (network_name es la id)
+        links = crud_link.get_link_by_slice(db, id_slice=id)
+        links_temp = {}
+
+        for link in links:
+
+            network_name = link.id
+            network = openstack.crearRed(GATEWAY_IP, project_token, network_name)
+            network_id = network["network"]["id"]
+            #5.- Creación de subnet (subnet name es el id)
+            subnet_name = f"Subnet_{link}"
+            subnet = openstack.crearSubred(GATEWAY_IP, project_token, network_id, subnet_name, IP_VERSION, CIDR)
+            subnet_id = subnet["subnet"]["id"]
+            #6.- Creación de puertos
+            port_name0 = link.port0.name
+            puerto0 = openstack.crearPuerto(GATEWAY_IP, project_token, port_name0, network_id, project_id)
+            puerto0_id = puerto0["port"]["id"]
+            port_name1 = link.port1.name
+            puerto1 = openstack.crearPuerto(GATEWAY_IP, project_token, port_name1, network_id, project_id)
+            puerto1_id = puerto1["port"]["id"]
+
+            links_temp[link.id] = {
+                "network": network_id,
+                "subnet": subnet_id,
+                "puerto0": puerto0_id,
+                "puerto1": puerto1_id
+            }
+        #7.- Crear las instancias
+
+        nodes = crud_node.get_nodes_by_slice(db, slice_id=id)
+        nodes_temp = {}
+
+        for node in nodes:
+
+            
+
+
+        
+
+        return {}
 
 
         ##zona disponibilidad
@@ -80,20 +127,9 @@ async def desplegar_slice(id: int, db=Depends(get_db)):
     else:
         print('No se pudo obtener el token.')
     return{}
-    
-#3.- Token del proyecto 
-    #3.1.-Asignar rol admin al usuario admin
-    #3.2.-Crear usuario y asignar rol al usuario (rol reader)
-#4.- Creacion de network (network_name es la id)
-#5.- Creación de subnet (subnet name es el id)
-#6.- Creación de puertos 
 
-#7.- validar el zona de disponibilidad 
-    #sacar id de worker y flavor
-    
 
-#8.- Crear las instancias
-#9.- En otra funcion: Eliminar Slices
+#8.- En otra funcion: Eliminar Slices
 
 
 
