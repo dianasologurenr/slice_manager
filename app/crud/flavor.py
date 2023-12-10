@@ -53,6 +53,19 @@ def get_flavors_by_id_slice(db: Session, id_slice: int):
 
     return flavors_pydantic
 
+def get_flavors_by_id_slice_distinct(db: Session, id_slice: int):
+    # Realiza la consulta usando SQLAlchemy con DISTINCT
+    flavors = db.query(models_flavor.Flavor) \
+                .join(models_node.Node, models_node.Node.id_flavor == models_flavor.Flavor.id) \
+                .filter(models_node.Node.id_slice == id_slice) \
+                .distinct() \
+                .all()
+
+    # Convierte los resultados a esquema Pydantic
+    flavors_pydantic = [convert_sqlalchemy_to_pydantic(flavor) for flavor in flavors]
+
+    return flavors_pydantic
+
 
 def convert_sqlalchemy_to_pydantic(flavor: models_flavor.Flavor) -> schema.Flavor:
     if flavor: 

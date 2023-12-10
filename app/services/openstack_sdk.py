@@ -200,3 +200,23 @@ def assign_role_to_user(auth_endpoint, token, project_id, user_id, role_id):
         r = requests.put(url=url, headers=headers)
         # status_code success = 204
         return r
+
+def create_flavor(auth_endpoint, token, name, ram, vcpus, disk, flavor_id):
+        
+    url = auth_endpoint + '/flavors'
+    headers = {'Content-type': 'application/json', 'X-Auth-Token': token}
+
+    data = \
+        {
+            "flavor": {
+                "name": name,
+                "ram": ram,
+                "vcpus": vcpus,
+                "disk": disk,
+                "id": flavor_id
+            }
+        }
+
+    r = requests.post(url=url, headers=headers, data=json.dumps(data))
+    # status_code success = 200
+    return r
