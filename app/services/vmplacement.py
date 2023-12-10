@@ -1,6 +1,7 @@
 import subprocess
 import re
 from datetime import datetime, timedelta
+import paramiko
 
 def obtener_valor_flavor(flavor_id, campo):
     # Ejecutar el comando openstack flavor show y obtener el valor específico del campo
@@ -9,50 +10,105 @@ def obtener_valor_flavor(flavor_id, campo):
 
     return int(valor) if valor.isdigit() else 0
 
-def calcular_requisitos(instancias_flavors):
-    total_ram = 0
-    total_disco = 0
+#def calcular_requisitos(instancias_flavors):
+#    total_ram = 0
+#    total_disco = 0
+#
+#    for flavor_id in instancias_flavors:
+#        # Obtener valores específicos del flavor desde la línea de comandos
+#        ram = obtener_valor_flavor(flavor_id, 'ram')
+#        disco = obtener_valor_flavor(flavor_id, 'disk')
+#
+#        # Sumar RAM y disco
+#        ram_gb = ram / 1024
+#        total_ram += ram_gb
+#        total_disco += disco
+#
+#   return total_ram, total_disco
 
-    for flavor_id in instancias_flavors:
-        # Obtener valores específicos del flavor desde la línea de comandos
-        ram = obtener_valor_flavor(flavor_id, 'ram')
-        disco = obtener_valor_flavor(flavor_id, 'disk')
 
-        # Sumar RAM y disco
-        ram_gb = ram / 1024
-        total_ram += ram_gb
-        total_disco += disco
+def calcular_requisitos(flavors):
+    total_ram = sum(flavor["ram"] for flavor in flavors)
+    total_disk = sum(flavor["disk"] for flavor in flavors)
 
-    return total_ram, total_disco
+    return total_ram, total_disk
 
+
+#def obtener_info_worker(worker):
+#    # Ejecutar el comando openstack hypervisor show
+#    comando = f'openstack hypervisor show {worker}'
+#    salida = subprocess.run(comando, capture_output=True, text=True, shell=True)
+#
+#    # Extraer información relevante usando expresiones regulares
+#    local_gb = int(re.search(r'\| local_gb\s*\|\s*(\d+)', salida.stdout).group(1))
+#    local_gb_used = int(re.search(r'\| local_gb_used\s*\|\s*(\d+)', salida.stdout).group(1))
+#    free_disk_gb = int(re.search(r'\| disk_available_least\s*\|\s*(-?\d+)', salida.stdout).group(1))
+#    memory_mb = int(re.search(r'\| memory_mb\s*\|\s*(\d+)', salida.stdout).group(1))
+#    memory_mb_used = int(re.search(r'\| memory_mb_used\s*\|\s*(\d+)', salida.stdout).group(1))
+#    free_ram_mb = int(re.search(r'\| free_ram_mb\s*\|\s*(\d+)', salida.stdout).group(1))
+#
+#    # Convertir de megabytes a gigabytes
+#    memory_mb = round(memory_mb / 1024, 2)
+#    memory_mb_used = round(memory_mb_used / 1024, 2)
+#    free_ram_mb = round(free_ram_mb / 1024, 2)
+
+
+#    return {
+#        'local_gb': local_gb,
+#        'local_gb_used': local_gb_used,
+#        'free_disk_gb': free_disk_gb,
+#        'memory_mb': memory_mb,
+#        'memory_mb_used': memory_mb_used,
+#        'free_ram_mb': free_ram_mb
+#    }
 
 def obtener_info_worker(worker):
-    # Ejecutar el comando openstack hypervisor show
-    comando = f'openstack hypervisor show {worker}'
-    salida = subprocess.run(comando, capture_output=True, text=True, shell=True)
+    # Configurar la conexión SSH
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    
+    # Información de la máquina remota
+    remote_host = '10.20.10.114'
+    remote_port = 5800
+    remote_user = 'ubuntu'
+    remote_password = 'ubuntu'
 
-    # Extraer información relevante usando expresiones regulares
-    local_gb = int(re.search(r'\| local_gb\s*\|\s*(\d+)', salida.stdout).group(1))
-    local_gb_used = int(re.search(r'\| local_gb_used\s*\|\s*(\d+)', salida.stdout).group(1))
-    free_disk_gb = int(re.search(r'\| disk_available_least\s*\|\s*(-?\d+)', salida.stdout).group(1))
-    memory_mb = int(re.search(r'\| memory_mb\s*\|\s*(\d+)', salida.stdout).group(1))
-    memory_mb_used = int(re.search(r'\| memory_mb_used\s*\|\s*(\d+)', salida.stdout).group(1))
-    free_ram_mb = int(re.search(r'\| free_ram_mb\s*\|\s*(\d+)', salida.stdout).group(1))
+    try:
+        # Conectar al servidor remoto
+        ssh.connect(remote_host, port=remote_port, username=remote_user, password=remote_password)
 
-    # Convertir de megabytes a gigabytes
-    memory_mb = round(memory_mb / 1024, 2)
-    memory_mb_used = round(memory_mb_used / 1024, 2)
-    free_ram_mb = round(free_ram_mb / 1024, 2)
+        # Ejecutar el comando openstack hypervisor show
+        comando = f'openstack hypervisor show {worker}'
+        stdin, stdout, stderr = ssh.exec_command(comando)
 
+        # Leer la salida del comando
+        salida = stdout.read().decode('utf-8')
 
-    return {
-        'local_gb': local_gb,
-        'local_gb_used': local_gb_used,
-        'free_disk_gb': free_disk_gb,
-        'memory_mb': memory_mb,
-        'memory_mb_used': memory_mb_used,
-        'free_ram_mb': free_ram_mb
-    }
+        # Extraer información relevante usando expresiones regulares
+        local_gb = int(re.search(r'\| local_gb\s*\|\s*(\d+)', salida).group(1))
+        local_gb_used = int(re.search(r'\| local_gb_used\s*\|\s*(\d+)', salida).group(1))
+        free_disk_gb = int(re.search(r'\| disk_available_least\s*\|\s*(-?\d+)', salida).group(1))
+        memory_mb = int(re.search(r'\| memory_mb\s*\|\s*(\d+)', salida).group(1))
+        memory_mb_used = int(re.search(r'\| memory_mb_used\s*\|\s*(\d+)', salida).group(1))
+        free_ram_mb = int(re.search(r'\| free_ram_mb\s*\|\s*(\d+)', salida).group(1))
+
+        # Convertir de megabytes a gigabytes
+        memory_mb = round(memory_mb / 1024, 2)
+        memory_mb_used = round(memory_mb_used / 1024, 2)
+        free_ram_mb = round(free_ram_mb / 1024, 2)
+
+        return {
+            'local_gb': local_gb,
+            'local_gb_used': local_gb_used,
+            'free_disk_gb': free_disk_gb,
+            'memory_mb': memory_mb,
+            'memory_mb_used': memory_mb_used,
+            'free_ram_mb': free_ram_mb
+        }
+
+    finally:
+        # Cerrar la conexión SSH después de su uso
+        ssh.close()
 
 
 def consulta_instancia(worker, instancias_flavors):
@@ -92,35 +148,46 @@ def analizar_logs(lista_workers):
     for worker in lista_workers:
         if(worker == 'Worker1'):
             log_file = f'10.0.0.30_logs.txt'
-            if not file_exists(log_file):
-                continue
-            if analizar_log(log_file):
+            if analizar_log_remotely(log_file):
                 return worker
         elif(worker == 'Worker2'):
             log_file = f'10.0.0.40_logs.txt'
-            if not file_exists(log_file):
-                continue
-            if analizar_log(log_file):
+            if analizar_log_remotely(log_file):
                 return worker
         elif(worker == 'Worker3'):
             log_file = f'10.0.0.50_logs.txt'
-            if not file_exists(log_file):
-                continue
-            if analizar_log(log_file):
+            if analizar_log_remotely(log_file):
                 return worker
         else:
             return None
 
-def file_exists(file_path):
-    try:
-        with open(file_path):
-            return True
-    except FileNotFoundError:
-        return False
+def analizar_log_remotely(log_file):
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-def analizar_log(log_file):
-    with open(log_file, 'r') as file:
-        lines = file.readlines()
+    try:
+        # Información del servidor remoto
+        remote_host = '10.20.10.114'
+        remote_port = 5800
+        remote_user = 'ubuntu'
+        remote_password = 'ubuntu'
+
+        # Conectar al servidor remoto
+        ssh.connect(remote_host, port=remote_port, username=remote_user, password=remote_password)
+
+        # Ejecutar el análisis del log remoto
+        command = f'cat {log_file}'
+        stdin, stdout, stderr = ssh.exec_command(command)
+        log_content = stdout.read().decode('utf-8')
+
+        return analizar_log(log_content)
+
+    finally:
+        # Cerrar la conexión SSH después de su uso
+        ssh.close()
+
+def analizar_log(log_content):
+    lines = log_content.split('\n')
 
     current_time = datetime.now()
     time_threshold = timedelta(minutes=10)
@@ -128,16 +195,18 @@ def analizar_log(log_file):
     memory_threshold = 50
 
     for line in lines:
-        timestamp_str, cpu_str, memory_str = re.search(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) - CPU: (\d+\.\d+)%\, Memoria: (\d+\.\d+)%', line).groups()
-        timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S')
-        cpu = float(cpu_str)
-        memory = float(memory_str)
+        match = re.search(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) - CPU: (\d+\.\d+)%\, Memoria: (\d+\.\d+)%', line)
+        if match:
+            timestamp_str, cpu_str, memory_str = match.groups()
+            timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S')
+            cpu = float(cpu_str)
+            memory = float(memory_str)
 
-        if current_time - timestamp > time_threshold:
-            break
+            if current_time - timestamp > time_threshold:
+                break
 
-        if cpu > cpu_threshold or memory > memory_threshold:
-            return False
+            if cpu > cpu_threshold or memory > memory_threshold:
+                return False
 
     return True
 
