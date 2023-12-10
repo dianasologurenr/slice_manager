@@ -220,3 +220,27 @@ def create_flavor(auth_endpoint, token, name, ram, vcpus, disk, flavor_id):
     r = requests.post(url=url, headers=headers, data=json.dumps(data))
     # status_code success = 200
     return r
+
+# IMAGE API
+def create_image(image_endpoint, token, name, image_id):
+    url = image_endpoint + '/images'
+    headers = {'Content-type': 'application/json', 'X-Auth-Token': token}
+
+    data = \
+        {
+            "name": name,
+            "container_format": "bare",
+            "disk_format": "qcow2",
+            "id": image_id
+        }
+
+    r = requests.post(url=url, headers=headers, data=json.dumps(data))
+    # status_code success = 200
+    return r
+
+def upload_image_data(image_endpoint, token, image_id, data_path):
+    url = f'{image_endpoint}/images/{image_id}/file'
+    headers = {'Content-type': 'application/octet-stream', 'X-Auth-Token': token}
+    with open(data_path, 'rb') as img_file:
+        r = requests.put(url, headers=headers, data=img_file)
+    return r
