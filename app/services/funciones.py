@@ -125,7 +125,24 @@ def crearFlavor(gateway_ip, token_for_project, name, ram, vcpus, disk, flavor_id
         print('FAILED INSTANCE CREATION')
         return None
 
-    
+def crearImagen(gateway_ip, token_for_project, name, path, image_id):
+    glance_endpoint = f'http://{gateway_ip}:9292/v2' 
+    resp = create_image(glance_endpoint, token_for_project, name, image_id)
+    print(resp.status_code)
+    if resp.status_code == 200:
+        print('IMAGE CREATED SUCCESSFULLY')
+        image_created = resp.json()
+        print(json.dumps(image_created))
+        resp = upload_image_data(glance_endpoint, token_for_project, image_id, path)
+        if resp.status_code == 200:
+            print('IMAGE UPLOADED SUCCESSFULLY')
+            return image_created
+        else:
+            print('FAILED IMAGE UPLOADING')
+            return None
+    else:
+        print('FAILED IMAGE CREATION')
+        return None
 
 
 def main():
