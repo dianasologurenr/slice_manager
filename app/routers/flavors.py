@@ -1,6 +1,7 @@
 from dependencies import get_db
 from fastapi import APIRouter, Depends, HTTPException
 from crud import flavor as crud_flavor
+from crud import nodes_flavor as crud_nodes_flavor
 import schemas.schema as schema
 from typing import List
 
@@ -25,6 +26,17 @@ async def read_flavor(id: int, db=Depends(get_db)):
 @router.post("/", response_model=schema.Flavor)
 async def create_flavor(flavor: schema.FlavorBase, db=Depends(get_db)):
     return crud_flavor.create_flavor(db=db, flavor=flavor)
+
+@router.get("/by_id_slice/{id_slice}", response_model=List[schema.Flavor])
+async def read_flavors_by_id_slice(id_slice: int, db=Depends(get_db)):
+    flavors = crud_flavor.get_flavors_by_id_slice(db, id_slice=id_slice)
+    
+    # Verifica si se obtuvieron resultados
+    if not flavors:
+        raise HTTPException(status_code=404, detail="Flavors not found")
+
+    return flavors
+
 
 # @router.delete("/{id}")
 # async def delete_user(id: str,db=Depends(get_db)):
