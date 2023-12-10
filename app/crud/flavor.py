@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 from models import user as models_user
 from models import slice_user as models_slice_user
 from models import slice as models_slice
@@ -45,13 +46,21 @@ def delete_flavor(db: Session, flavor_id: int):
 
 
 def get_flavors_by_id_slice(db: Session, id_slice: int):
-    # Realiza la consulta usando SQLAlchemy
-    flavors = db.query(models_flavor.Flavor).join(models_node.Node, models_node.Node.id_flavor == models_flavor.Flavor.id).filter(models_node.Node.id_slice == id_slice).all()
+    # Define la consulta
+    query = select(
+            models_flavor.Flavor.id, 
+            models_flavor.Flavor.core, 
+            models_flavor.Flavor.ram, 
+            models_flavor.Flavor.disk
+        ) \
+        .select_from(models_node.Node) \
+        .join(models_flavor.Flavor, models_flavor.Flavor.id == models_node.Node.id_flavor, isouter=True) \
+        .where(models_node.Node.id_slice == id_slice)
 
-    # Convierte los resultados a esquema Pydantic
-    flavors_pydantic = [convert_sqlalchemy_to_pydantic(flavor) for flavor in flavors]
+    # Ejecuta la consulta
+    result = db.execute(query).fetchall()
 
-    return flavors_pydantic
+    return result
 
 
 def convert_sqlalchemy_to_pydantic(flavor: models_flavor.Flavor) -> schema.Flavor:
