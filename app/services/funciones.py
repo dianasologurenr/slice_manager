@@ -1,9 +1,7 @@
-from openstack_sdk import password_authentication_with_scoped_authorization
-from openstack_sdk import token_authentication_with_scoped_authorization
-from openstack_sdk import create_network
-from openstack_sdk import create_subnet
-from openstack_sdk import create_port
-from openstack_sdk import create_instance
+from services.openstack_sdk import *
+
+
+from config import GATEWAY_IP, ADMIN_PASSWORD, ADMIN_PROJECT_NAME, ADMIN_DOMAIN_NAME,DOMAIN_ID,ADMIN_USERNAME
 import json
 
 def obtenerTokenAdmin(gateway_ip, admin_password, admin_username, admin_domain_name, domain_id, admin_project_name):
@@ -82,16 +80,29 @@ def crearInstancia(gateway_ip, token_for_project, instance_name, flavor_id, imag
         print('FAILED INSTANCE CREATION')
         return None
     
+def crearProyecto(gateway_ip, token_for_project, domain_id, project_name, project_description):
+    keystone_endpoint = f'http://{gateway_ip}:5000/v3'
+    resp = create_project(keystone_endpoint, token_for_project, domain_id, project_name, project_description)
+    print(resp.status_code)
+    if resp.status_code == 202:
+        print('INSTANCE CREATED SUCCESSFULLY')
+        project_created = resp.json()
+        print(json.dumps(project_created))
+    else:
+        print('FAILED INSTANCE CREATION')
+        return None
+
+    
 
 
 def main():
     #Datos que no se cambian
-    gateway_ip = '10.20.10.114'
-    admin_password = 'f2d47da4670dc4fb30e1e6e1eed8bb7e'
-    admin_username = 'admin'
-    admin_domain_name = 'Default'
-    domain_id = 'default'
-    admin_project_name = 'admin'
+    gateway_ip = GATEWAY_IP
+    admin_password = ADMIN_PASSWORD
+    admin_domain_name = ADMIN_DOMAIN_NAME
+    domain_id = DOMAIN_ID
+    admin_project_name = ADMIN_PROJECT_NAME
+    admin_username = ADMIN_USERNAME
 
     #Datos que deben cambiarse de acuerdo a lo que ingresa el usuario 
     network_name = 'Enlace 1'
@@ -128,5 +139,5 @@ def main():
     else:
         print('La autenticación del administrador ha fallado. No se pudo obtener el token.')
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
     main()

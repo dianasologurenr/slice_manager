@@ -7,6 +7,10 @@ from crud import slice_user as crud_slice_user
 from crud import node as crud_node
 from crud import port as crud_port
 from crud import link as crud_link
+from services import funciones as openstack
+from config import GATEWAY_IP, ADMIN_PASSWORD, ADMIN_PROJECT_NAME, ADMIN_DOMAIN_NAME,DOMAIN_ID,ADMIN_USERNAME
+
+
 
 import schemas.schema as schema
 from typing import List, Optional
@@ -35,6 +39,38 @@ async def create_slice(slice: schema.SliceBase, db=Depends(get_db)):
     if db_slice:
         raise HTTPException(status_code=400, detail="There is already a slice with that name")
     return crud_slice.create_slice(db=db, slice=slice)
+
+@router.post("/deploy/{id}")
+async def desplegar_slice(id: int, db=Depends(get_db)):
+    db_slice = crud_slice.get_slice(db, slice_id=id)
+    if db_slice is None:
+        raise HTTPException(status_code=404, detail="Slice not found")
+    print("desplegado")
+
+#0.- Validar el espacio (monitoreo) obtener id_az que viene con id_slice y luego nombre 
+#1.- Obtener token
+#2.- Crear el proyecto
+    project_name = db_slice.name
+    project_description = "-"
+    project_token = openstack.obtenerTokenAdmin(GATEWAY_IP,ADMIN_PASSWORD,ADMIN_USERNAME,ADMIN_DOMAIN_NAME,DOMAIN_ID,ADMIN_PROJECT_NAME) 
+    if project_token:
+        openstack.crearProyecto(GATEWAY_IP,project_token, DOMAIN_ID, project_name, project_description)
+        print('Exitoso')
+    else:
+        print('No se pudo obtener el token.')
+    return{}
+    
+#3.- Token del proyecto 
+    #3.1.-Asignar rol admin al usuario admin
+    #3.2.-Crear usuario y asignar rol al usuario (rol reader)
+#4.- Creacion de network (network_name es la id)
+#5.- Creación de subnet (subnet name es el id)
+#6.- Creación de puertos 
+#7.- Crear las instancias
+#8.- En otra funcion: Eliminar Slices
+
+
+
 
 # Update slice
 @router.patch("/{id}", response_model=schema.Slice)
