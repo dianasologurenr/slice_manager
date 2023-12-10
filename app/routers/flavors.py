@@ -1,7 +1,6 @@
 from dependencies import get_db
 from fastapi import APIRouter, Depends, HTTPException
 from crud import flavor as crud_flavor
-from crud import nodes_flavor as crud_nodes_flavor
 import schemas.schema as schema
 from typing import List
 

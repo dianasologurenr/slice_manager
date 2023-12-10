@@ -32,6 +32,14 @@ def get_link_by_port(db: Session, id_port: int):
                                                  models_link.Link.id_port1 == id_port)).first()
     return convert_sqlalchemy_to_pydantic(link)
 
+def get_link_by_port0(db: Session, id_port: int):
+    link = db.query(models_link.Link).filter(models_link.Link.id_port0 == id_port).first()
+    return convert_sqlalchemy_to_pydantic(link)
+
+def get_link_by_port1(db: Session, id_port: int):
+    link = db.query(models_link.Link).filter(models_link.Link.id_port1 == id_port).first()
+    return convert_sqlalchemy_to_pydantic(link)
+
 def get_link_by_slice(db: Session, id_slice: int):
     links = db.query(models_link.Link)\
         .join(models_port.Port, models_link.Link.id_port0 == models_port.Port.id)\
