@@ -191,3 +191,12 @@ def create_instance(auth_endpoint, token, name, flavorRef, imageRef, network_lis
     r = requests.post(url=url, headers=headers, data=json.dumps(data))
     # status_code success = 202
     return r
+
+def assign_role_to_user(auth_endpoint, token, project_id, user_id, role_id):
+            
+        url = auth_endpoint + '/projects/' + project_id + '/users/' + user_id + '/roles/' + role_id
+        headers = {'Content-type': 'application/json', 'X-Auth-Token': token}
+    
+        r = requests.put(url=url, headers=headers)
+        # status_code success = 204
+        return r

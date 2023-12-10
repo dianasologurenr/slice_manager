@@ -19,20 +19,26 @@ def obtenerTokenAdmin(gateway_ip, admin_password, admin_username, admin_domain_n
     if resp.status_code == 201:
         admin_token = resp.headers['X-Subject-Token']
         print(f'Token de administrador: {admin_token}')
-        resp1 = token_authentication_with_scoped_authorization(
+        return admin_token
+    else:
+        print('La autenticación del administrador ha fallado')
+        return None
+    
+def obtenerTokenProject(gateway_ip, admin_token, domain_id, project_name):
+    keystone_endpoint = f'http://{gateway_ip}:5000/v3'
+
+    resp1 = token_authentication_with_scoped_authorization(
             keystone_endpoint,
             admin_token, 
             domain_id,
-            admin_project_name)
-        if resp1.status_code == 201:
-            token_for_project = resp1.headers['X-Subject-Token']
-            print(f'Token del proyecto: {token_for_project}')
-            return token_for_project
-        else:
-            print('FAILED AUTHENTICATION FOR PROJECT ')
-            return None
+            project_name
+    )
+    if resp1.status_code == 201:
+        token_for_project = resp1.headers['X-Subject-Token']
+        print(f'Token del proyecto: {token_for_project}')
+        return token_for_project
     else:
-        print('La autenticación del administrador ha fallado')
+        print('FAILED AUTHENTICATION FOR PROJECT ')
         return None
     
 def crearRed(gateway_ip, token_for_project, network_name):
@@ -42,6 +48,7 @@ def crearRed(gateway_ip, token_for_project, network_name):
         print('NETWORK CREATED SUCCESSFULLY')
         network_created = resp3.json()
         print(json.dumps(network_created))
+        return network_created
     else:
         print('FAILED NETWORK CREATION')
         return None
@@ -53,6 +60,7 @@ def crearSubred(gateway_ip, token_for_project, network_id, subnet_name, ip_versi
         print('SUBNET CREATED SUCCESSFULLY')
         subnet_created = resp.json()
         print(json.dumps(subnet_created))
+        return subnet_created
     else:
         print('FAILED SUBNET CREATION')
         return None
@@ -64,6 +72,7 @@ def crearPuerto(gateway_ip, token_for_project, port_name, network_id, project_id
         print('PORT CREATED SUCCESSFULLY')
         port_created = resp.json()
         print(json.dumps(port_created))
+        return port_created
     else:
         print('FAILED PORT CREATION')
         return None
@@ -84,12 +93,23 @@ def crearProyecto(gateway_ip, token_for_project, domain_id, project_name, projec
     keystone_endpoint = f'http://{gateway_ip}:5000/v3'
     resp = create_project(keystone_endpoint, token_for_project, domain_id, project_name, project_description)
     print(resp.status_code)
-    if resp.status_code == 202:
-        print('INSTANCE CREATED SUCCESSFULLY')
+    if resp.status_code == 201:
+        print('PROJECT CREATED SUCCESSFULLY')
         project_created = resp.json()
         print(json.dumps(project_created))
+        return project_created
     else:
-        print('FAILED INSTANCE CREATION')
+        print('FAILED PROJECT CREATION')
+        return None
+    
+def asignarRol(gateway_ip, admin_token, project_id, user_id, role_id):
+    keystone_endpoint = f'http://{gateway_ip}:5000/v3'
+    resp = assign_role_to_user(keystone_endpoint, admin_token, project_id, user_id, role_id)
+    print(resp.status_code)
+    if resp.status_code == 204:
+        print('ROL ASIGNADO SUCCESSFULLY')
+    else:
+        print('ROL NO ASIGNADO')
         return None
 
     

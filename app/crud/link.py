@@ -32,6 +32,12 @@ def get_link_by_port(db: Session, id_port: int):
                                                  models_link.Link.id_port1 == id_port)).first()
     return convert_sqlalchemy_to_pydantic(link)
 
+def get_link_by_slice(db: Session, id_slice: int):
+    links = db.query(models_link.Link)\
+        .join(models_port.Port, models_link.Link.id_port0 == models_port.Port.id)\
+        .join(models_node.Node).filter(models_node.Node.id_slice == id_slice).all()
+    return [convert_sqlalchemy_to_pydantic(link) for link in links]
+
 def create_link(db: Session, link: schema.LinkBase):
     db_link = models_link.Link(
         id_port0 = link.id_port0,
@@ -48,11 +54,23 @@ def delete_link(db: Session, id: int):
     db.commit()
     return {"message": "Link deleted successfully"}
 
-def convert_sqlalchemy_to_pydantic(Link: models_link.Link) -> schema.Link:
-    if Link:
+def convert_sqlalchemy_to_pydantic(link: models_link.Link) -> schema.Link:
+    if link:
         return schema.Link(
-            id=Link.id,
-            id_port0=Link.id_port0,
-            id_port1=Link.id_port1
+            id=link.id,
+            id_port0=link.id_port0,
+            id_port1=link.id_port1,
+
+            port0=schema.Port(
+                id=link.port0.id,
+                name=link.port0.name,
+                id_node=link.port0.id_node
+            )if link.port0 else None,
+
+            port1=schema.Port(
+                id=link.port1.id,
+                name=link.port1.name,
+                id_node=link.port1.id_node
+            )if link.port1 else None
         )
     return None

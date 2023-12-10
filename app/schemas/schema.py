@@ -179,6 +179,8 @@ class NodeUpdate(BaseModel):
 
 class Link(LinkBase):
     id: int
+    port0: Optional[Port] = None
+    port1: Optional[Port] = None
 
     class Config:
         from_attributes = True
