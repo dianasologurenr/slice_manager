@@ -60,9 +60,24 @@ async def desplegar_slice(id: int, db=Depends(get_db)):
     elif db_availability_zone == 3:
         db_availability_zone = 'Worker3'
     flavors = crud_flavor.get_flavors_by_id_slice(db,id_slice=id)
-    zona_disponibilidad = vmplacement.elegir_zonaDisponibilidad(flavors,db_availability_zone)
+    print(flavors)
+    print("--------------------")
+    print(db_availability_zone)
+    tuplas = flavors
+    resultado_json = []
+    for tupla in tuplas:
+        diccionario = {
+            "id": tupla[0],
+            "cpu": tupla[1],
+            "ram": tupla[2],
+            "disk": tupla[3]
+        }
+        resultado_json.append(diccionario)
+    print(resultado_json)
+    zona_disponibilidad = vmplacement.elegir_zonaDisponibilidad(db_availability_zone,resultado_json)
     if zona_disponibilidad:
-        print("La zona disponibilidad es: "+zona_disponibilidad)
+        print(f"La zona disponibilidad es: {zona_disponibilidad} ")
+        #zona_disponibilidad = 'Worker1'
 
     #1.- Obtener token 
         project_name = db_slice.name
@@ -70,77 +85,137 @@ async def desplegar_slice(id: int, db=Depends(get_db)):
         admin_token = openstack.obtenerTokenAdmin(GATEWAY_IP,ADMIN_PASSWORD,ADMIN_USERNAME,ADMIN_DOMAIN_NAME,DOMAIN_ID,ADMIN_PROJECT_NAME) 
         if admin_token:
             #2.- Crear el proyecto
-
             project = openstack.crearProyecto(GATEWAY_IP, admin_token, DOMAIN_ID, project_name, project_description)
-            project_id = project["project"]["id"]
-            openstack.asignarRol(GATEWAY_IP, admin_token, project_id, ADMIN_ID, ADMIN)
-            #3.- Token del proyecto 
-                #3.1.-Asignar rol admin al usuario admin
-                #3.2.-Crear usuario y asignar rol al usuario (rol reader) --pendiente--
-            project_token = openstack.obtenerTokenProject(GATEWAY_IP, admin_token, DOMAIN_ID, project_name)
-            print(project_token)
-            #4.- Creacion de network (network_name es la id)
-            links = crud_link.get_link_by_slice(db, id_slice=id)
-            links_temp = {}
+            if project:
+                project_id = project["project"]["id"]
+                rol = openstack.asignarRol(GATEWAY_IP, admin_token, project_id, ADMIN_ID, ADMIN)
+                #3.- Token del proyecto 
+                    #3.1.-Asignar rol admin al usuario admin
+                    #3.2.-Crear usuario y asignar rol al usuario (rol reader) --pendiente--
+                if rol:
+                    project_token = openstack.obtenerTokenProject(GATEWAY_IP, admin_token, DOMAIN_ID, project_name)
+                    if project_token:
+                        print(project_token)
+                        #4.- Creacion de network (network_name es la id)
+                        links = crud_link.get_link_by_slice(db, id_slice=id)
+                        links_temp = {}
 
-            for link in links:
+                        for link in links:
 
-                network_name = str(link.id)
-                network = openstack.crearRed(GATEWAY_IP, project_token, network_name)
-                
-                network_id = network["network"]["id"]
-                #5.- Creación de subnet (subnet name es el id)
-                subnet_name = f"Subnet_{link.id}"
-                subnet = openstack.crearSubred(GATEWAY_IP, project_token, network_id, subnet_name, IP_VERSION, CIDR)
-                subnet_id = subnet["subnet"]["id"]
-                #6.- Creación de puertos
-                port_name0 = link.port0.name
-                puerto0 = openstack.crearPuerto(GATEWAY_IP, project_token, port_name0, network_id, project_id)
-                puerto0_id = puerto0["port"]["id"]
-                port_name1 = link.port1.name
-                puerto1 = openstack.crearPuerto(GATEWAY_IP, project_token, port_name1, network_id, project_id)
-                puerto1_id = puerto1["port"]["id"]
+                            network_name = str(link.id)
+                            network = openstack.crearRed(GATEWAY_IP, project_token, network_name)
+                            
+                            if network is None:
+                                failed = True
+                                break
+                            
+                            network_id = network["network"]["id"]
+                            
+                            #5.- Creación de subnet (subnet name es el id)
+                            subnet_name = f"Subnet_{link.id}"
+                            subnet = openstack.crearSubred(GATEWAY_IP, project_token, network_id, subnet_name, IP_VERSION, CIDR)
+                            
+                            if subnet is None:
+                                failed = True
+                                break
+                            
+                            subnet_id = subnet["subnet"]["id"]
+                            
+                            #6.- Creación de puertos
+                            port_name0 = link.port0.name
+                            puerto0 = openstack.crearPuerto(GATEWAY_IP, project_token, port_name0, 
+                            network_id, project_id)
+                            
+                            if puerto0 is None:
+                                failed = True
+                                break
+                            
+                            puerto0_id = puerto0["port"]["id"]
+                            
+                            port_name1 = link.port1.name
+                            puerto1 = openstack.crearPuerto(GATEWAY_IP, project_token, port_name1, network_id, project_id)
+                            
+                            if puerto1 is None:
+                                failed = True
+                                break
+                            
+                            puerto1_id = puerto1["port"]["id"]
 
-                links_temp[link.id] = {
-                    "network": network_id,
-                    "subnet": subnet_id,
-                    "puerto0": puerto0_id,
-                    "puerto1": puerto1_id
-                }
-            #7.- Crear las instancias
-                #7.1 Crear Flavors
-            
-            flavors = crud_flavor.get_flavors_by_id_slice_distinct(db, id_slice=id)
-            for flavor in flavors:
-                name = f"Flavor_{flavor.id}"
-                ram = flavor.ram
-                vcpus = flavor.core
-                disk = flavor.disk
-
-                flavor_os = openstack.crearFlavor(GATEWAY_IP, project_token, name, int(ram), vcpus, int(disk), flavor.id)
-                
-
-
-            nodes = crud_node.get_nodes_by_slice(db, slice_id=id)
-            nodes_temp = {}
-
-            for node in nodes:
-                instance_name = node.name
-                flavor_id = node.flavor.id
-                networks = []
-                for port in node.ports:
-                    link = crud_link.get_link_by_port0(db, id_port=port.id)
-                    if link is None:
-                        link = crud_link.get_link_by_port1(db, id_port=port.id)
-                        port = links_temp[link.id]["puerto1"]
-                    else:
-                        port = links_temp[link.id]["puerto0"]
+                            links_temp[link.id] = {
+                                "network": network_id,
+                                "subnet": subnet_id,
+                                "puerto0": puerto0_id,
+                                "puerto1": puerto1_id
+                            }
+                        #7.- Crear las instancias
+                            #7.1 Crear Flavors
                         
-                    networks.append({"port": port})
-                node0 = openstack.crearInstancia(GATEWAY_IP, project_token, instance_name, flavor_id, IMAGEN_ID, networks,zona_disponibilidad)
+                        flavors = crud_flavor.get_flavors_by_id_slice_distinct(db, id_slice=id)
+                        for flavor in flavors:
+                            name = f"Flavor_{flavor.id}"
+                            ram = flavor.ram
+                            vcpus = flavor.core
+                            disk = flavor.disk
+
+                            flavor_os = openstack.crearFlavor(GATEWAY_IP, project_token, name, int(ram), vcpus, int(disk), flavor.id)
+
+                            if flavor_os is None:
+                                failed = True
+                                break
+                            
+                        nodes = crud_node.get_nodes_by_slice(db, slice_id=id)
+
+                        for node in nodes:
+                            instance_name = node.name
+                            flavor_id = node.flavor.id
+                            networks = []
+                            for port in node.ports:
+                                link = crud_link.get_link_by_port0(db, id_port=port.id)
+                                if link is None:
+                                    link = crud_link.get_link_by_port1(db, id_port=port.id)
+                                    port = links_temp[link.id]["puerto1"]
+                                else:
+                                    port = links_temp[link.id]["puerto0"]
+                                    
+                                networks.append({"port": port})
+                            
+                            node0 = openstack.crearInstancia(GATEWAY_IP, project_token, instance_name, flavor_id, IMAGEN_ID, networks,zona_disponibilidad)
+                            if node0 is None:
+                                failed = True
+                                break
+
+                        if failed:
+                            print('No se pudo crear la instancia.')
+
+                    else:
+                        print('No se pudo obtener el token del proyecto.')
+                        failed = True            
+                else:
+                    print('No se pudo asignar el rol admin al usuario admin.')
+                    failed = True                
+            else:
+                print('No se pudo crear el proyecto.')
+                failed = True            
         else:
             print('No se pudo obtener el token.')
-        return{}
+            failed = True
+    else:
+        print('No se pudo obtener la zona de disponibilidad.')
+        failed = True
+
+    if failed:
+        # Update slice status
+        update_slice = schema.SliceUpdate(status="failed")
+        crud_slice.update_slice(db=db,id=id,slice=update_slice)
+        return {"message": "Slice deployment failed"}
+    else:
+        # Update slice status
+        update_slice = schema.SliceUpdate(status="running")
+        crud_slice.update_slice(db=db,id=id,slice=update_slice)
+        return {"message": "Slice deployed successfully"}
+
+
+#8.- En otra funcion: Eliminar Slices
 
 
 #8.- En otra funcion: Eliminar Slices
