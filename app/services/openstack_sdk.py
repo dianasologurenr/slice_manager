@@ -151,7 +151,7 @@ def create_port(auth_endpoint, token, name, network_id, project_id):
 
 # NOVA API
 #def create_instance(auth_endpoint, token, name, flavorRef, imageRef=None, availability_zone=None, network_list=None, compute_version=None):
-def create_instance(auth_endpoint, token, name, flavorRef, imageRef, network_list):
+def create_instance(auth_endpoint, token, name, flavorRef, imageRef, network_list, availability_zone):
     url = auth_endpoint + '/servers'
     headers = {
         'Content-type': 'application/json',
@@ -168,7 +168,7 @@ def create_instance(auth_endpoint, token, name, flavorRef, imageRef, network_lis
                 'name': name,
                 'flavorRef': flavorRef,
                 'imageRef': imageRef,
-                #'availability_zone': availability_zone,
+                'availability_zone': availability_zone,
                 'networks': network_list,
                 
             }

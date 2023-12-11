@@ -60,8 +60,7 @@ async def desplegar_slice(id: int, db=Depends(get_db)):
     elif db_availability_zone == 3:
         db_availability_zone = 'Worker3'
     flavors = crud_flavor.get_flavors_by_id_slice(db,id_slice=id)
-    #zona_disponibilidad = vmplacement.elegir_zonaDisponibilidad(flavors,db_availability_zone)
-    zona_disponibilidad ="Worker1"
+    zona_disponibilidad = vmplacement.elegir_zonaDisponibilidad(flavors,db_availability_zone)
     if zona_disponibilidad:
         print("La zona disponibilidad es: "+zona_disponibilidad)
 
@@ -138,7 +137,7 @@ async def desplegar_slice(id: int, db=Depends(get_db)):
                         port = links_temp[link.id]["puerto0"]
                         
                     networks.append({"port": port})
-                node0 = openstack.crearInstancia(GATEWAY_IP, project_token, instance_name, flavor_id, IMAGEN_ID, networks)
+                node0 = openstack.crearInstancia(GATEWAY_IP, project_token, instance_name, flavor_id, IMAGEN_ID, networks,zona_disponibilidad)
         else:
             print('No se pudo obtener el token.')
         return{}

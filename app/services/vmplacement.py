@@ -1,223 +1,140 @@
-import subprocess
-import re
-from datetime import datetime, timedelta
 import paramiko
+import json
+from datetime import datetime
 
-def obtener_valor_flavor(flavor_id, campo):
-    # Ejecutar el comando openstack flavor show y obtener el valor específico del campo
-    comando = f'openstack flavor show {flavor_id} | grep "| {campo}" | awk -F "|" \'{{print $3}}\' | tr -d \'[:space:]\''
-    valor = subprocess.run(comando, capture_output=True, text=True, shell=True).stdout.strip()
+def restar_ram_from_memory(memory_avail_GB, flavor_ram_MB):
+    # Restar la RAM del flavor a la Memory Avail
+    new_memory_avail_GB = memory_avail_GB - (flavor_ram_MB / 1000)
+    return max(new_memory_avail_GB, 0)  # Asegurar que el resultado sea al menos 0
 
-    return int(valor) if valor.isdigit() else 0
+def obtener_worker_elegido(worker, dataTotal):
+    for entry in dataTotal:
+        if worker == "Worker1":
+            if entry.get("VM IP") == f"10.0.0.30":
+                return [entry]
+            break
+        if worker == "Worker2":
+            if entry.get("VM IP") == f"10.0.0.40":
+                return [entry]
+            break
+        if worker == "Worker3":
+            if entry.get("VM IP") == f"10.0.0.50":
+                return [entry]
+            break
+    return None
 
-#def calcular_requisitos(instancias_flavors):
-#    total_ram = 0
-#    total_disco = 0
-#
-#    for flavor_id in instancias_flavors:
-#        # Obtener valores específicos del flavor desde la línea de comandos
-#        ram = obtener_valor_flavor(flavor_id, 'ram')
-#        disco = obtener_valor_flavor(flavor_id, 'disk')
-#
-#        # Sumar RAM y disco
-#        ram_gb = ram / 1024
-#        total_ram += ram_gb
-#        total_disco += disco
-#
-#   return total_ram, total_disco
-
-
-def calcular_requisitos(flavors):
-    total_ram = sum(flavor["ram"] for flavor in flavors)
-    total_disk = sum(flavor["disk"] for flavor in flavors)
-
-    return total_ram, total_disk
-
-
-#def obtener_info_worker(worker):
-#    # Ejecutar el comando openstack hypervisor show
-#    comando = f'openstack hypervisor show {worker}'
-#    salida = subprocess.run(comando, capture_output=True, text=True, shell=True)
-#
-#    # Extraer información relevante usando expresiones regulares
-#    local_gb = int(re.search(r'\| local_gb\s*\|\s*(\d+)', salida.stdout).group(1))
-#    local_gb_used = int(re.search(r'\| local_gb_used\s*\|\s*(\d+)', salida.stdout).group(1))
-#    free_disk_gb = int(re.search(r'\| disk_available_least\s*\|\s*(-?\d+)', salida.stdout).group(1))
-#    memory_mb = int(re.search(r'\| memory_mb\s*\|\s*(\d+)', salida.stdout).group(1))
-#    memory_mb_used = int(re.search(r'\| memory_mb_used\s*\|\s*(\d+)', salida.stdout).group(1))
-#    free_ram_mb = int(re.search(r'\| free_ram_mb\s*\|\s*(\d+)', salida.stdout).group(1))
-#
-#    # Convertir de megabytes a gigabytes
-#    memory_mb = round(memory_mb / 1024, 2)
-#    memory_mb_used = round(memory_mb_used / 1024, 2)
-#    free_ram_mb = round(free_ram_mb / 1024, 2)
-
-
-#    return {
-#        'local_gb': local_gb,
-#        'local_gb_used': local_gb_used,
-#        'free_disk_gb': free_disk_gb,
-#        'memory_mb': memory_mb,
-#        'memory_mb_used': memory_mb_used,
-#        'free_ram_mb': free_ram_mb
-#    }
-
-def obtener_info_worker(worker):
+def ejecutar_script_remoto(worker, datosflavor):
     # Configurar la conexión SSH
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    
+
     # Información de la máquina remota
     remote_host = '10.20.10.114'
     remote_port = 5800
     remote_user = 'ubuntu'
     remote_password = 'ubuntu'
 
+    worker_resultante = worker
+
     try:
         # Conectar al servidor remoto
         ssh.connect(remote_host, port=remote_port, username=remote_user, password=remote_password)
 
-        # Ejecutar el comando openstack hypervisor show
-        comando = f'openstack hypervisor show {worker}'
+        # Ejecutar el script remoto
+        comando = 'python3 monitoreo.py'
         stdin, stdout, stderr = ssh.exec_command(comando)
 
-        # Leer la salida del comando
-        salida = stdout.read().decode('utf-8')
+        # Imprimir la salida del script remoto
+        print("Salida del script remoto:")
+        dataTotal = json.loads(stdout.read().decode('utf-8'))
+        print(json.dumps(dataTotal, indent=3))
 
-        # Extraer información relevante usando expresiones regulares
-        local_gb = int(re.search(r'\| local_gb\s*\|\s*(\d+)', salida).group(1))
-        local_gb_used = int(re.search(r'\| local_gb_used\s*\|\s*(\d+)', salida).group(1))
-        free_disk_gb = int(re.search(r'\| disk_available_least\s*\|\s*(-?\d+)', salida).group(1))
-        memory_mb = int(re.search(r'\| memory_mb\s*\|\s*(\d+)', salida).group(1))
-        memory_mb_used = int(re.search(r'\| memory_mb_used\s*\|\s*(\d+)', salida).group(1))
-        free_ram_mb = int(re.search(r'\| free_ram_mb\s*\|\s*(\d+)', salida).group(1))
+        # Obtener el json del worker elegido
+        worker_data = obtener_worker_elegido(worker, dataTotal)
 
-        # Convertir de megabytes a gigabytes
-        memory_mb = round(memory_mb / 1024, 2)
-        memory_mb_used = round(memory_mb_used / 1024, 2)
-        free_ram_mb = round(free_ram_mb / 1024, 2)
+        if worker_data:
+            # Extraer el valor de Memory Avail en GB
+            first_entry = worker_data[0]
+            memory_avail_GB = float(first_entry["Memory Avail"].rstrip(" GB"))
 
-        return {
-            'local_gb': local_gb,
-            'local_gb_used': local_gb_used,
-            'free_disk_gb': free_disk_gb,
-            'memory_mb': memory_mb,
-            'memory_mb_used': memory_mb_used,
-            'free_ram_mb': free_ram_mb
-        }
+            # Restar la RAM de cada flavor
+            for flavor in datosflavor:
+                memory_avail_GB = restar_ram_from_memory(memory_avail_GB, flavor["ram"])
+            print(f'---------------------------------------------------------------')
+            print(f'Nueva memoria es {memory_avail_GB}')
+            # Verificar si el Memory Avail es menor a 1
+            if memory_avail_GB < 1:
+                # Intentar con otros workers
+                print("La Memory Avail es menor a 1. Intentando con otros workers.")
 
-    finally:
-        # Cerrar la conexión SSH después de su uso
-        ssh.close()
+                # Lista de workers que no han sido elegidos
+                otros_workers = ["Worker2", "Worker3"] if worker == "Worker1" else ["Worker1", "Worker3"] if worker == "Worker2" else ["Worker1", "Worker2"]
+                
+                for otro_worker in otros_workers:
+                    print(f"Probando con {otro_worker}")
+                    # Obtener el json del otro worker
+                    worker_data_otro = obtener_worker_elegido(otro_worker, dataTotal)
 
+                    if worker_data_otro:
+                        # Extraer el valor de Memory Avail en GB
+                        first_entry_otro = worker_data_otro[0]
+                        memory_avail_GB_otro = float(first_entry_otro["Memory Avail"].rstrip(" GB"))
 
-def consulta_instancia(worker, instancias_flavors):
-    lista_workers = ["Worker1", "Worker2", "Worker3"]
-    # Obtener información del worker
-    info_worker = obtener_info_worker(worker)
-    
-    # Calcular requisitos de las instancias
-    total_ram, total_disco = calcular_requisitos(instancias_flavors)
-    
-    # Validar si el worker puede soportar las instancias
-    if info_worker['free_ram_mb'] >= total_ram and info_worker['free_disk_gb'] >= total_disco:
-        print(f"El worker {worker} tiene suficientes recursos para instanciar las instancias.")
-        return worker
-    else:
-        print(f"El worker {worker} no tiene suficientes recursos para instanciar las instancias.")
-        print(f"Recursos requeridos: RAM={total_ram} GB, Disco={total_disco} GB")
-        print(f"Recursos disponibles: RAM={info_worker['free_ram_mb']} GB, Disco={info_worker['free_disk_gb']} GB")
+                        # Restar la RAM de cada flavor
+                        for flavor in datosflavor:
+                            memory_avail_GB_otro = restar_ram_from_memory(memory_avail_GB_otro, flavor["ram"])
 
-        # Consultar otros workers
-        for otro_worker in lista_workers:
-            if otro_worker != worker:
-                print(f"Intentando con el worker {otro_worker}...")
-                info_otro_worker = obtener_info_worker(otro_worker)
-                if info_otro_worker['free_ram_mb'] >= total_ram and info_otro_worker['free_disk_gb'] >= total_disco:
-                    print(f"El worker {otro_worker} tiene suficientes recursos para instanciar las instancias.")
-                    return otro_worker
-                else:
-                    print(f"El worker {otro_worker} tampoco tiene suficientes recursos.")
-                    print(f"Recursos disponibles: RAM={info_otro_worker['free_ram_mb']} GB, Disco={info_otro_worker['free_disk_gb']} GB")
+                        print(f'---------------------------------------------------------------')
+                        print(f'Nueva memoria para {otro_worker} es {memory_avail_GB_otro}')
 
-        # Si ninguno de los workers tiene suficientes recursos, realizar nueva lógica
-        print("Ningún worker tiene suficientes recursos para instanciar las instancias.")
-        return analizar_logs(lista_workers)
+                        # Verificar si el Memory Avail es mayor o igual a 1
+                        if memory_avail_GB_otro >= 1:
+                            worker_resultante = otro_worker
+                            break  # Salir del bucle si encontramos un worker que cumple
+                
+                print(f"El worker resultante luego del bucle es {worker_resultante}")
+                
+                if worker_resultante == worker:
+                    print("El worker resultante luego del bucle es el mismo que el original.")
+                    #continuar la lógica del código
+                    for otro_worker in ["Worker1", "Worker2", "Worker3"]:
+                        print(f"Verificando logs de {otro_worker}")
+                        logs_comando = f'cat {otro_worker}_logs.txt'
+                        stdin_logs, stdout_logs, stderr_logs = ssh.exec_command(logs_comando)
 
-def analizar_logs(lista_workers):
-    for worker in lista_workers:
-        if(worker == 'Worker1'):
-            log_file = f'10.0.0.30_logs.txt'
-            if analizar_log_remotely(log_file):
-                return worker
-        elif(worker == 'Worker2'):
-            log_file = f'10.0.0.40_logs.txt'
-            if analizar_log_remotely(log_file):
-                return worker
-        elif(worker == 'Worker3'):
-            log_file = f'10.0.0.50_logs.txt'
-            if analizar_log_remotely(log_file):
-                return worker
-        else:
-            return None
+                        # Analizar los registros de logs
+                        logs = stdout_logs.read().decode('utf-8').splitlines()
+                        for log in logs:
+                            try:
+                                timestamp_str, rest_of_the_line = log.split(" - ", 1)  # Solo se divide en el primer '-'
+                                cpu_str, memoria_str = rest_of_the_line.split(", ")
+                                timestamp = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S")
+                                cpu = float(cpu_str.split(":")[1].strip('%'))
+                                memoria = float(memoria_str.split(":")[1].strip('%'))
 
-def analizar_log_remotely(log_file):
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
-    try:
-        # Información del servidor remoto
-        remote_host = '10.20.10.114'
-        remote_port = 5800
-        remote_user = 'ubuntu'
-        remote_password = 'ubuntu'
-
-        # Conectar al servidor remoto
-        ssh.connect(remote_host, port=remote_port, username=remote_user, password=remote_password)
-
-        # Ejecutar el análisis del log remoto
-        command = f'cat {log_file}'
-        stdin, stdout, stderr = ssh.exec_command(command)
-        log_content = stdout.read().decode('utf-8')
-
-        return analizar_log(log_content)
+                                # Verificar si se superan los umbrales
+                                if cpu > 70 or memoria > 60:
+                                    break  # Si se supera, salir del bucle
+                            except ValueError:
+                                # Ignorar líneas que no tienen el formato esperado
+                                continue
+                        else:
+                            # Si el bucle no se rompe, no se superaron los umbrales
+                            worker_resultante = otro_worker
+                            print(f"Se seleccionó el Worker {worker_resultante} debido a los registros de logs.")
+                            break
+                    
+            else:
+                # Si el Memory Avail es mayor o igual a 1, no es necesario probar con otros workers
+                worker_resultante = worker
 
     finally:
         # Cerrar la conexión SSH después de su uso
         ssh.close()
 
-def analizar_log(log_content):
-    lines = log_content.split('\n')
+    return worker_resultante
 
-    current_time = datetime.now()
-    time_threshold = timedelta(minutes=10)
-    cpu_threshold = 70
-    memory_threshold = 50
 
-    for line in lines:
-        match = re.search(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) - CPU: (\d+\.\d+)%\, Memoria: (\d+\.\d+)%', line)
-        if match:
-            timestamp_str, cpu_str, memory_str = match.groups()
-            timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S')
-            cpu = float(cpu_str)
-            memory = float(memory_str)
-
-            if current_time - timestamp > time_threshold:
-                break
-
-            if cpu > cpu_threshold or memory > memory_threshold:
-                return False
-
-    return True
-
-def elegir_zonaDisponibilidad(flavors,worker):
-    #flavors_a_crear = ['flavor1','flavor2','flavor3','flavor4','flavor5']
-    #worker_final = consulta_instancia('Worker1', flavors_a_crear)
-    worker_final = consulta_instancia(worker, flavors)
-
-    if worker_final:
-        print(f"Se seleccionó el worker {worker_final} para instanciar las instancias.")
-        return worker_final
-    else:
-        print("No hay workers disponibles con suficientes recursos.")
-        return None
+def elegir_zonaDisponibilidad(worker,flavors):
+    worker = ejecutar_script_remoto(worker,flavors)
+    return worker
