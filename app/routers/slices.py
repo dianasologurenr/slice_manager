@@ -49,11 +49,6 @@ async def desplegar_slice(id: int, db=Depends(get_db)):
     if db_slice is None:
         raise HTTPException(status_code=404, detail="Slice not found")
     print("desplegado")
-    failed = False
-    # Update slice status
-    update_slice = schema.SliceUpdate(status="creating")
-    crud_slice.update_slice(db=db,id=id,slice=update_slice)
-    
 
 #0.- Validar el espacio (monitoreo) obtener id_az que viene con id_slice y luego nombre 
     ##zona disponibilidad
@@ -65,9 +60,23 @@ async def desplegar_slice(id: int, db=Depends(get_db)):
     elif db_availability_zone == 3:
         db_availability_zone = 'Worker3'
     flavors = crud_flavor.get_flavors_by_id_slice(db,id_slice=id)
-    zona_disponibilidad = vmplacement.elegir_zonaDisponibilidad(flavors,db_availability_zone)
+    print(flavors)
+    print("--------------------")
+    print(db_availability_zone)
+    tuplas = flavors
+    resultado_json = []
+    for tupla in tuplas:
+        diccionario = {
+            "id": tupla[0],
+            "cpu": tupla[1],
+            "ram": tupla[2],
+            "disk": tupla[3]
+        }
+        resultado_json.append(diccionario)
+    print(resultado_json)
+    zona_disponibilidad = vmplacement.elegir_zonaDisponibilidad(db_availability_zone,resultado_json)
     if zona_disponibilidad:
-        print("La zona disponibilidad es: "+zona_disponibilidad)
+        print(f"La zona disponibilidad es: {zona_disponibilidad} ")
 
     #1.- Obtener token 
         project_name = db_slice.name
@@ -203,10 +212,6 @@ async def desplegar_slice(id: int, db=Depends(get_db)):
         update_slice = schema.SliceUpdate(status="running")
         crud_slice.update_slice(db=db,id=id,slice=update_slice)
         return {"message": "Slice deployed successfully"}
-
-
-#8.- En otra funcion: Eliminar Slices
-
 
 # Update slice
 @router.patch("/{id}", response_model=schema.Slice)
