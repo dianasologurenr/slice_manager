@@ -1,6 +1,7 @@
 from dependencies import get_db
 from fastapi import APIRouter, Depends, Form, HTTPException
 from crud import node as crud_node
+from crud import link as crud_link
 import schemas.schema as schema
 from typing import List, Optional
 
@@ -60,10 +61,17 @@ async def update_node(id: int,
     return crud_node.update_node(db=db,id=id,node=update_node)
 
 
-
 @router.delete("/{id}")
 async def delete_node(id: str,db=Depends(get_db)):
     db_node = crud_node.get_node(db, id=id)
     if db_node is None:
         raise HTTPException(status_code=404, detail="Node not found")
     return crud_node.delete_node(db=db, node_id=id)
+
+@router.post("/links/", response_model=schema.Link)
+async def create_node(link: schema.LinkBase, db=Depends(get_db)):
+    db_link_p1 = crud_link.get_link_by_port(db,id_port=link.id_port0)
+    db_link_p2 = crud_link.get_link_by_port(db,id_port=link.id_port1)
+    if db_link_p1 or db_link_p2:
+        raise HTTPException(status_code=400, detail="Link exists")
+    return crud_link.create_link(db=db, link=link)

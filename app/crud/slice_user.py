@@ -39,8 +39,9 @@ def create_slice_user(db: Session, slice_user: schema.SliceUserBase):
     return convert_sqlalchemy_to_pydantic(db_slice_user)
 
 def delete_slice_user(db: Session, slice_user: schema.SliceUserBase):
-    db_slice_user = db.query(models_slice_user.SliceUser).filter(models_slice_user.SliceUser.id_slice==slice_user.id_slice,
-                                                              models_slice_user.SliceUser.id_user==slice_user.id_user).first()
+    db_slice_user = db.query(models_slice_user.SliceUser)\
+        .filter(models_slice_user.SliceUser.id_slice==slice_user.id_slice,
+                models_slice_user.SliceUser.id_user==slice_user.id_user).first()
     db.delete(db_slice_user)
     db.commit()
     return {"message": "Slice_User deleted successfully"}
