@@ -85,13 +85,47 @@ def create_project(auth_endpoint, token, domain_id, project_name, project_descri
 
 def get_projects(auth_endpoint, token):
             
-        url = auth_endpoint + '/projects'
-        headers = {'Content-type': 'application/json', 'X-Auth-Token': token}
-    
-        r = requests.get(url=url, headers=headers)
-        # status_code success = 200
-        return r
+    url = auth_endpoint + '/projects'
+    headers = {'Content-type': 'application/json', 'X-Auth-Token': token}
 
+    r = requests.get(url=url, headers=headers)
+    # status_code success = 200
+    return r
+
+def deleted_project(auth_endpoint,token,project_id):
+    url = auth_endpoint + '/projects/' + project_id
+    headers = {'Content-type': 'application/json', 'X-Auth-Token': token}
+
+    r = requests.delete(url=url, headers=headers)
+    # status_code success = 204
+    return r
+
+def assign_role_to_user(auth_endpoint, token, project_id, user_id, role_id):
+            
+    url = auth_endpoint + '/projects/' + project_id + '/users/' + user_id + '/roles/' + role_id
+    headers = {'Content-type': 'application/json', 'X-Auth-Token': token}
+
+    r = requests.put(url=url, headers=headers)
+    # status_code success = 204
+    return r
+
+def unassign_role_to_user(auth_endpoint, token, project_id, user_id, role_id):             
+
+    url = auth_endpoint + '/projects/' + project_id + '/users/' + user_id + '/roles/' + role_id
+    headers = {'Content-type': 'application/json', 'X-Auth-Token': token}
+
+    r = requests.delete(url=url, headers=headers)
+    # status_code success = 204
+    return r
+
+def get_users(auth_endpoint, token):
+                
+    url = auth_endpoint + '/users'
+    headers = {'Content-type': 'application/json', 'X-Auth-Token': token}
+
+    r = requests.get(url=url, headers=headers)
+    # status_code success = 200
+    return r
 
 # NEUTRON API
 #def create_network(auth_endpoint, token, name, network_type=None, segmentation_id=None):
@@ -118,6 +152,24 @@ def create_network(auth_endpoint, token, name):
     # status_code success = 201
     return r
 
+def get_networks(auth_endpoint, token):
+                
+    url = auth_endpoint + '/networks'
+    headers = {'Content-type': 'application/json', 'X-Auth-Token': token}
+
+    r = requests.get(url=url, headers=headers)
+    # status_code success = 200
+    return r
+
+def delete_network(auth_endpoint, token, network_id):
+            
+        url = auth_endpoint + '/networks/' + network_id
+        headers = {'Content-type': 'application/json', 'X-Auth-Token': token}
+    
+        r = requests.delete(url=url, headers=headers)
+        # status_code success = 204
+        return r
+
 def create_subnet(auth_endpoint, token, network_id, name, ip_version, cidr):
         
     url = auth_endpoint + '/subnets'
@@ -140,6 +192,24 @@ def create_subnet(auth_endpoint, token, network_id, name, ip_version, cidr):
     # status_code success = 201
     return r
 
+def get_subnets(auth_endpoint, token):
+                
+    url = auth_endpoint + '/subnets'
+    headers = {'Content-type': 'application/json', 'X-Auth-Token': token}
+
+    r = requests.get(url=url, headers=headers)
+    # status_code success = 200
+    return r
+
+def delete_subnet(auth_endpoint, token, subnet_id):
+                
+    url = auth_endpoint + '/subnets/' + subnet_id
+    headers = {'Content-type': 'application/json', 'X-Auth-Token': token}
+
+    r = requests.delete(url=url, headers=headers)
+    # status_code success = 204
+    return r
+
 def create_port(auth_endpoint, token, name, network_id, project_id):
         
     url = auth_endpoint + '/ports'
@@ -157,6 +227,24 @@ def create_port(auth_endpoint, token, name, network_id, project_id):
 
     r = requests.post(url=url, headers=headers, data=json.dumps(data))
     # status_code success = 201
+    return r
+
+def get_ports(auth_endpoint, token):
+            
+    url = auth_endpoint + '/ports'
+    headers = {'Content-type': 'application/json', 'X-Auth-Token': token}
+
+    r = requests.get(url=url, headers=headers)
+    # status_code success = 200
+    return r
+
+def delete_port(auth_endpoint, token, port_id):
+                
+    url = auth_endpoint + '/ports/' + port_id
+    headers = {'Content-type': 'application/json', 'X-Auth-Token': token}
+
+    r = requests.delete(url=url, headers=headers)
+    # status_code success = 204
     return r
 
 # NOVA API
@@ -202,14 +290,6 @@ def create_instance(auth_endpoint, token, name, flavorRef, imageRef, network_lis
     # status_code success = 202
     return r
 
-def assign_role_to_user(auth_endpoint, token, project_id, user_id, role_id):
-            
-        url = auth_endpoint + '/projects/' + project_id + '/users/' + user_id + '/roles/' + role_id
-        headers = {'Content-type': 'application/json', 'X-Auth-Token': token}
-    
-        r = requests.put(url=url, headers=headers)
-        # status_code success = 204
-        return r
 
 def create_flavor(auth_endpoint, token, name, ram, vcpus, disk, flavor_id):
         
@@ -229,6 +309,14 @@ def create_flavor(auth_endpoint, token, name, ram, vcpus, disk, flavor_id):
 
     r = requests.post(url=url, headers=headers, data=json.dumps(data))
     # status_code success = 200
+    return r
+
+def delete_flavor(auth_endpoint, token,flavor_id):
+    url = auth_endpoint + '/flavors/' + flavor_id
+    headers = {'Content-type': 'application/json', 'X-Auth-Token': token}
+
+    r = requests.delete(url=url, headers=headers)
+    # status_code success = 202
     return r
 
 def get_instances(auth_endpoint, token):

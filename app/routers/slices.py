@@ -274,71 +274,120 @@ async def update_slice(id: int,
 
 @router.delete("/{id}")
 async def delete_slice(id: str,db=Depends(get_db)):
-    db_slice = crud_slice.get_slice(db, slice_id=id)
-    if db_slice is None:
-        raise HTTPException(status_code=404, detail="Slice not found")
-    if db_slice.status == "creating":
-        raise HTTPException(status_code=400, detail="Slice is being deployed")
-    if db_slice.status == "failed":
-        raise HTTPException(status_code=400, detail="Slice deployment failed")
+    # db_slice = crud_slice.get_slice(db, slice_id=id)
+    # if db_slice is None:
+    #     raise HTTPException(status_code=404, detail="Slice not found")
+    # if db_slice.status == "creating":
+    #     raise HTTPException(status_code=400, detail="Slice is being deployed")
+    # if db_slice.status == "failed":
+    #     raise HTTPException(status_code=400, detail="Slice deployment failed")
     
-    if db_slice.status == "running":
-        print("Eliminando slice")
+    # if db_slice.status == "running":
+    #     print("Eliminando slice")
        
-        # project_name = db_slice.name
+    #     project_name = db_slice.name
+    project_name = "lab5"
 
-        # # Auth
-        # admin_token = openstack.obtenerTokenAdmin(GATEWAY_IP,ADMIN_PASSWORD,ADMIN_USERNAME,ADMIN_DOMAIN_NAME,DOMAIN_ID,ADMIN_PROJECT_NAME)
-        # project_token = openstack.obtenerTokenProject(GATEWAY_IP, admin_token, DOMAIN_ID, project_name)
         
-        # # Obtener id de proyecto
-        # project_id = openstack.obtenerIdProyecto(GATEWAY_IP, project_token, project_name)
-
-
-
+    # Auth
+    admin_token = openstack.obtenerTokenAdmin(GATEWAY_IP,ADMIN_PASSWORD,ADMIN_USERNAME,ADMIN_DOMAIN_NAME,DOMAIN_ID,ADMIN_PROJECT_NAME)
+    project_token = openstack.obtenerTokenProject|(GATEWAY_IP, admin_token, DOMAIN_ID, project_name)
     
-    
-    print("Eliminando slice de la base de datos")
-    # Delete links
-    links = crud_link.get_link_by_slice(db, id_slice=id)
+    # Obtener id de proyecto
+    project_id = openstack.obtenerIdProyecto(GATEWAY_IP, project_token, project_name)
 
-    for link in links:
-        if link:
-            crud_link.delete_link(db=db, id=link.id)
-    # Delete ports
-    nodes = crud_node.get_nodes_by_slice(db, slice_id=id)
-    # Delete flavors
-    flavor = crud_flavor.get_flavors_by_id_slice_distinct(db, id_slice=id)
-    for flavor in flavor:
-        if flavor:
-            crud_flavor.delete_flavor(db=db, flavor_id=flavor.id)
+    servers = openstack.obtenerInstancias(GATEWAY_IP, project_token)
+    if servers:
+        for server in servers["servers"]:
+            print(f"this is the server: {server}")
+            deleted_server = openstack.eliminarInstancia(GATEWAY_IP,project_token,server["id"])
     
-    for node in nodes:
-        # Delete ports
-        if node:
-            ports = node.ports
-            if ports != []:
-                for port in ports:
-                    crud_port.delete_port(db=db, id=port.id)
-                # Delete node
-            crud_node.delete_node(db=db, node_id=node.id)
+    flavors = crud_flavor.get_flavors_by_id_slice_distinct(db, id_slice=id)
+    if flavors:
+        for flavor in flavors:
+            deleted_flavor = openstack.eliminarFlavor(GATEWAY_IP, project_token, flavor.id)
 
-    users = db_slice.users
-    if users != []:
-        for user in users:
-            # Delete slice_user
-            if user:
-                slice_user = schema.SliceUserBase(
-                    id_slice=db_slice.id,
-                    id_user=user.id
-                )
-                crud_slice_user.delete_slice_user(db=db, slice_user=slice_user)
+    ports = openstack.obtenerPuertos(GATEWAY_IP, project_token)
+    if ports:
+        for port in ports["ports"]:
+            print(f"this is the port: {port['name']}")
+            deleted_port = openstack.eliminarPuerto(GATEWAY_IP, project_token, port["id"])  
 
-                #Delete user
-                crud_user.delete_user(db=db, user_id=user.id)
+    subnets = openstack.obtenerSubredes(GATEWAY_IP, project_token)
+    if subnets:
+        for subnet in subnets["subnets"]:
+            print(f"this is the subnet: {subnet['name']}")
+            deleted_subnet = openstack.eliminarSubred(GATEWAY_IP, project_token, subnet["id"])
+
+    network = openstack.obtenerRedes(GATEWAY_IP, project_token)
+    if network:
+        for net in network["networks"]:
+            print(f"this is the network: {net['name']}")
+            deleted_network = openstack.eliminarRed(GATEWAY_IP, project_token, net["id"])
     
-    # Delete slice
-    return crud_slice.delete_slice(db=db, slice_id=db_slice.id)
+    # Unassign role to admin
+    permiso_admi = openstack.desasignarRol(GATEWAY_IP, admin_token, project_id, ADMIN_ID, ADMIN)
+    
+    # Unassign role to users
+    # users = openstack.obtenerUsuarios(GATEWAY_IP, project_token)
+    # for user in users["users"]:
+    #     print(f"this is the user: {user['name']}")
+    #     permisos = openstack.desasignarRol(GATEWAY_IP, project_token, user["id"], project_id, READER)
+    
+    if permiso_admi:
+    
+        deleted_project=openstack.eliminarProyecto(GATEWAY_IP, admin_token, project_id)
+        if deleted_project:
+            # Delete slice
+            print("Slice eliminado")
+            return {}
+        else:
+            print("No se pudo eliminar el slice")
+            return {}
+ 
+    return {}
+
+    # print("Eliminando slice de la base de datos")
+    # # Delete links
+    # links = crud_link.get_link_by_slice(db, id_slice=id)
+
+    # for link in links:
+    #     if link:
+    #         crud_link.delete_link(db=db, id=link.id)
+    # # Delete ports
+    # nodes = crud_node.get_nodes_by_slice(db, slice_id=id)
+    # # Delete flavors
+    # flavor = crud_flavor.get_flavors_by_id_slice_distinct(db, id_slice=id)
+    # for flavor in flavor:
+    #     if flavor:
+    #         crud_flavor.delete_flavor(db=db, flavor_id=flavor.id)
+    
+    # for node in nodes:
+    #     # Delete ports
+    #     if node:
+    #         ports = node.ports
+    #         if ports != []:
+    #             for port in ports:
+    #                 crud_port.delete_port(db=db, id=port.id)
+    #             # Delete node
+    #         crud_node.delete_node(db=db, node_id=node.id)
+
+    # users = db_slice.users
+    # if users != []:
+    #     for user in users:
+    #         # Delete slice_user
+    #         if user:
+    #             slice_user = schema.SliceUserBase(
+    #                 id_slice=db_slice.id,
+    #                 id_user=user.id
+    #             )
+    #             crud_slice_user.delete_slice_user(db=db, slice_user=slice_user)
+
+    #             #Delete user
+    #             crud_user.delete_user(db=db, user_id=user.id)
+    
+    # # Delete slice
+    # return crud_slice.delete_slice(db=db, slice_id=db_slice.id)
 
 @router.post("/users/", response_model=schema.SliceUser)
 async def create_slice_user(slice_user: schema.SliceUserBase, db=Depends(get_db)):
