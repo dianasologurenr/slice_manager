@@ -49,11 +49,6 @@ async def desplegar_slice(id: int, db=Depends(get_db)):
     if db_slice is None:
         raise HTTPException(status_code=404, detail="Slice not found")
     print("desplegado")
-    failed = False
-    # Update slice status
-    update_slice = schema.SliceUpdate(status="creating")
-    crud_slice.update_slice(db=db,id=id,slice=update_slice)
-    
 
 #0.- Validar el espacio (monitoreo) obtener id_az que viene con id_slice y luego nombre 
     ##zona disponibilidad
@@ -82,7 +77,6 @@ async def desplegar_slice(id: int, db=Depends(get_db)):
     zona_disponibilidad = vmplacement.elegir_zonaDisponibilidad(db_availability_zone,resultado_json)
     if zona_disponibilidad:
         print(f"La zona disponibilidad es: {zona_disponibilidad} ")
-        #zona_disponibilidad = 'Worker1'
 
     #1.- Obtener token 
         project_name = db_slice.name
@@ -104,61 +98,9 @@ async def desplegar_slice(id: int, db=Depends(get_db)):
                         #4.- Creacion de network (network_name es la id)
                         links = crud_link.get_link_by_slice(db, id_slice=id)
                         links_temp = {}
-            if project:
-                project_id = project["project"]["id"]
-                rol = openstack.asignarRol(GATEWAY_IP, admin_token, project_id, ADMIN_ID, ADMIN)
-                #3.- Token del proyecto 
-                    #3.1.-Asignar rol admin al usuario admin
-                    #3.2.-Crear usuario y asignar rol al usuario (rol reader) --pendiente--
-                if rol:
-                    project_token = openstack.obtenerTokenProject(GATEWAY_IP, admin_token, DOMAIN_ID, project_name)
-                    if project_token:
-                        print(project_token)
-                        #4.- Creacion de network (network_name es la id)
-                        links = crud_link.get_link_by_slice(db, id_slice=id)
-                        links_temp = {}
 
                         for link in links:
-                        for link in links:
 
-                            network_name = str(link.id)
-                            network = openstack.crearRed(GATEWAY_IP, project_token, network_name)
-                            
-                            if network is None:
-                                failed = True
-                                break
-                            
-                            network_id = network["network"]["id"]
-                            
-                            #5.- Creación de subnet (subnet name es el id)
-                            subnet_name = f"Subnet_{link.id}"
-                            subnet = openstack.crearSubred(GATEWAY_IP, project_token, network_id, subnet_name, IP_VERSION, CIDR)
-                            
-                            if subnet is None:
-                                failed = True
-                                break
-                            
-                            subnet_id = subnet["subnet"]["id"]
-                            
-                            #6.- Creación de puertos
-                            port_name0 = link.port0.name
-                            puerto0 = openstack.crearPuerto(GATEWAY_IP, project_token, port_name0, 
-                            network_id, project_id)
-                            
-                            if puerto0 is None:
-                                failed = True
-                                break
-                            
-                            puerto0_id = puerto0["port"]["id"]
-                            
-                            port_name1 = link.port1.name
-                            puerto1 = openstack.crearPuerto(GATEWAY_IP, project_token, port_name1, network_id, project_id)
-                            
-                            if puerto1 is None:
-                                failed = True
-                                break
-                            
-                            puerto1_id = puerto1["port"]["id"]
                             network_name = str(link.id)
                             network = openstack.crearRed(GATEWAY_IP, project_token, network_name)
                             
@@ -213,29 +155,7 @@ async def desplegar_slice(id: int, db=Depends(get_db)):
                             ram = flavor.ram
                             vcpus = flavor.core
                             disk = flavor.disk
-                            links_temp[link.id] = {
-                                "network": network_id,
-                                "subnet": subnet_id,
-                                "puerto0": puerto0_id,
-                                "puerto1": puerto1_id
-                            }
-                        #7.- Crear las instancias
-                            #7.1 Crear Flavors
-                        
-                        flavors = crud_flavor.get_flavors_by_id_slice_distinct(db, id_slice=id)
-                        for flavor in flavors:
-                            name = f"Flavor_{flavor.id}"
-                            ram = flavor.ram
-                            vcpus = flavor.core
-                            disk = flavor.disk
 
-                            flavor_os = openstack.crearFlavor(GATEWAY_IP, project_token, name, int(ram), vcpus, int(disk), flavor.id)
-
-                            if flavor_os is None:
-                                failed = True
-                                break
-                            
-                        nodes = crud_node.get_nodes_by_slice(db, slice_id=id)
                             flavor_os = openstack.crearFlavor(GATEWAY_IP, project_token, name, int(ram), vcpus, int(disk), flavor.id)
 
                             if flavor_os is None:
@@ -292,13 +212,6 @@ async def desplegar_slice(id: int, db=Depends(get_db)):
         update_slice = schema.SliceUpdate(status="running")
         crud_slice.update_slice(db=db,id=id,slice=update_slice)
         return {"message": "Slice deployed successfully"}
-
-
-#8.- En otra funcion: Eliminar Slices
-
-
-#8.- En otra funcion: Eliminar Slices
-
 
 # Update slice
 @router.patch("/{id}", response_model=schema.Slice)
