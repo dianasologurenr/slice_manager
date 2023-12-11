@@ -83,6 +83,16 @@ def create_project(auth_endpoint, token, domain_id, project_name, project_descri
     # status_code success = 201
     return r
 
+def get_projects(auth_endpoint, token):
+            
+        url = auth_endpoint + '/projects'
+        headers = {'Content-type': 'application/json', 'X-Auth-Token': token}
+    
+        r = requests.get(url=url, headers=headers)
+        # status_code success = 200
+        return r
+
+
 # NEUTRON API
 #def create_network(auth_endpoint, token, name, network_type=None, segmentation_id=None):
 def create_network(auth_endpoint, token, name):
@@ -219,4 +229,22 @@ def create_flavor(auth_endpoint, token, name, ram, vcpus, disk, flavor_id):
 
     r = requests.post(url=url, headers=headers, data=json.dumps(data))
     # status_code success = 200
+    return r
+
+def get_instances(auth_endpoint, token):
+            
+        url = auth_endpoint + '/servers'
+        headers = {'Content-type': 'application/json', 'X-Auth-Token': token}
+    
+        r = requests.get(url=url, headers=headers)
+        # status_code success = 200
+        return r
+
+def delete_instance(auth_endpoint, token, instance_id):
+        
+    url = auth_endpoint + '/servers/' + instance_id
+    headers = {'Content-type': 'application/json', 'X-Auth-Token': token}
+
+    r = requests.delete(url=url, headers=headers)
+    # status_code success = 204
     return r

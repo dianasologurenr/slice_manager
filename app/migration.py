@@ -27,14 +27,16 @@ Base.metadata.create_all(bind=engine)
 session = SessionLocal()
 
 ## AvailabilityZone
-zone1 = AvailabilityZone(name="zona1", latitude=18.21329, longitude=78.89518)
+zone1 = AvailabilityZone(name="Worker1", latitude=18.21329, longitude=78.89518)
 session.add(zone1)
-zone2 = AvailabilityZone(name="zona2", latitude=26.68452, longitude=117.75975)
-session.add(zone1)
+zone2 = AvailabilityZone(name="Worker2", latitude=26.68452, longitude=117.75975)
+session.add(zone2)
+zone3 = AvailabilityZone(name="Worker3", latitude=12.68452, longitude=77.75975)
+session.add(zone3)
 
 ## Slice
 new_slice = Slice(
-    name = "Test",
+    name = "Slice Default",
     topology = "lineal",
     status = "not_deployed",
     az=zone1
@@ -73,64 +75,64 @@ session.add(new_slice_user)
 
 ## Servers
 worker1 = Server(
-    core= 2,
-    ram = 2,
+    core= 5,
+    ram = 5,
     disk = 10,
     ip = "10.0.0.30",
-    usage = 0.2,
+    usage = 0.3,
     az=zone1)
 session.add(worker1)
 worker2 = Server(
-    core= 2,
-    ram = 2,
+    core= 5,
+    ram = 5,
     disk = 10,
     ip = "10.0.0.40",
-    usage = 0.2,
-    az=zone1)
+    usage = 0.3,
+    az=zone2)
 session.add(worker2)
 worker3 = Server(
-    core= 2,
-    ram = 2,
+    core= 5,
+    ram = 5,
     disk = 10,
     ip = "10.0.0.50",
-    usage = 0.2,
-    az=zone2)
+    usage = 0.3,
+    az=zone3)
 session.add(worker3)
 
-## Alerts
-alert_type1= Alert(
-    name = "Carga de CPU",
-    description = "Uso de CPU superior al umbral establecido"
-)
-session.add(alert_type1)
-alert_type2= Alert(
-    name = "Memoria RAM",
-    description = "Uso de memoria cerca del límite máximo"
-)
-session.add(alert_type2)
-alert_type3= Alert(
-    name = "Alamacenamiento",
-    description = "Espacio de almacenamiento agotado o casi agotado",
-    priority = "alta"
-)
-session.add(alert_type3)
+# ## Alerts
+# alert_type1= Alert(
+#     name = "Carga de CPU",
+#     description = "Uso de CPU superior al umbral establecido"
+# )
+# session.add(alert_type1)
+# alert_type2= Alert(
+#     name = "Memoria RAM",
+#     description = "Uso de memoria cerca del límite máximo"
+# )
+# session.add(alert_type2)
+# alert_type3= Alert(
+#     name = "Alamacenamiento",
+#     description = "Espacio de almacenamiento agotado o casi agotado",
+#     priority = "alta"
+# )
+# session.add(alert_type3)
 
-## Monitoreo
-alert1 = Monitoreo(
-    server=worker1,
-    alert=alert_type1
-)
-session.add(alert1)
-alert2 = Monitoreo(
-    server=worker2,
-    alert=alert_type2
-)
-session.add(alert2)
-alert3 = Monitoreo(
-    server=worker3,
-    alert=alert_type3
-)
-session.add(alert3)
+# ## Monitoreo
+# alert1 = Monitoreo(
+#     server=worker1,
+#     alert=alert_type1
+# )
+# session.add(alert1)
+# alert2 = Monitoreo(
+#     server=worker2,
+#     alert=alert_type2
+# )
+# session.add(alert2)
+# alert3 = Monitoreo(
+#     server=worker3,
+#     alert=alert_type3
+# )
+# session.add(alert3)
 
 ## Images
 image1 = Image (
@@ -148,25 +150,25 @@ image2 = Image (
 )
 session.add(image2)
 
-## Flavors
-flavor1 = Flavor(
-    core=2,
-    ram=4,
-    disk=100
-)
-session.add(flavor1)
-flavor2 = Flavor(
-    core=2,
-    ram=8,
-    disk=200
-)
-session.add(flavor2)
-flavor3 = Flavor(
-    core=1,
-    ram=2,
-    disk=50
-)
-session.add(flavor3)
+# ## Flavors
+# flavor1 = Flavor(
+#     core=2,
+#     ram=4,
+#     disk=100
+# )
+# session.add(flavor1)
+# flavor2 = Flavor(
+#     core=2,
+#     ram=8,
+#     disk=200
+# )
+# session.add(flavor2)
+# flavor3 = Flavor(
+#     core=1,
+#     ram=2,
+#     disk=50
+# )
+# session.add(flavor3)
 
 ## Security Groups
 sg1_all = Security(
@@ -179,20 +181,20 @@ session.add(sg1_all)
 
 ## Nodes
 node1 = Node (
-    name= "VM1",
+    name= "VM_1",
     internetaccess= 0,
-    image= image1,
-    flavor= flavor1,
+    image= None,
+    flavor= None,
     slice= new_slice,
     server= worker1,
     security= sg1_all
 )
 session.add(node1)
 node2 = Node (
-    name= "VM2",
+    name= "VM_2",
     internetaccess= 0,
-    image= image1,
-    flavor= flavor1,
+    image= None,
+    flavor= None,
     slice= new_slice,
     server= worker1,
     security= sg1_all
@@ -201,12 +203,12 @@ session.add(node2)
 
 ## Ports
 port1 = Port(
-    name= "port0",
+    name= "port_0",
     node= node1
 )
 session.add(port1)
 port2 = Port(
-    name= "port1",
+    name= "port_0",
     node= node2
 )
 session.add(port2)
