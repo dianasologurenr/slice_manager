@@ -232,3 +232,9 @@ async def delete_slice(slice_user: schema.SliceUserBase,db=Depends(get_db)):
     if db_slice_user is None:
         raise HTTPException(status_code=404, detail="User not found in slice")
     return crud_slice_user.delete_slice_user(db=db, slice_user=slice_user)
+
+@router.get("/links/{id_slice}",response_model=List[schema.Link])
+async def read_links_by_slice(id_slice: int, db=Depends(get_db)):
+    db_links = crud_link.get_link_by_slice(db, id_slice=id_slice)
+    
+    return db_links
