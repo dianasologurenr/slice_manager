@@ -290,6 +290,14 @@ def create_instance(auth_endpoint, token, name, flavorRef, imageRef, network_lis
     # status_code success = 202
     return r
 
+def get_instance(auth_endpoint, token, instance_id):
+            
+    url = auth_endpoint + '/servers/' + instance_id
+    headers = {'Content-type': 'application/json', 'X-Auth-Token': token}
+
+    r = requests.get(url=url, headers=headers)
+    # status_code success = 200
+    return r
 
 def create_flavor(auth_endpoint, token, name, ram, vcpus, disk, flavor_id):
         

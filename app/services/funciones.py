@@ -197,6 +197,22 @@ def crearInstancia(gateway_ip, token_for_project, instance_name, flavor_id, imag
         print('FAILED INSTANCE CREATION')
         return None
 
+def obtenerInstancia(gateway_ip, token_for_project, instance_id):
+    nova_endpoint = f'http://{gateway_ip}:8774/v2.1' 
+    try:
+        resp = get_instance(nova_endpoint, token_for_project, instance_id)
+        print(resp.status_code)
+        if resp.status_code == 200:
+            print('INSTANCE OBTAINED SUCCESSFULLY')
+            instance = resp.json()
+            print(json.dumps(instance))
+            return instance
+        else:
+            print('FAILED INSTANCE OBTAINMENT')
+            return None
+    except:
+        return None
+
 def obtenerInstancias(gateway_ip, token_for_project):
     nova_endpoint = f'http://{gateway_ip}:8774/v2.1' 
     try:
