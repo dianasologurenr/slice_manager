@@ -185,7 +185,7 @@ def eliminarPuerto(gateway_ip, token_for_project, port_id):
 def crearInstancia(gateway_ip, token_for_project, instance_name, flavor_id, image_id, networks,zona_disponibilidad):
     nova_endpoint = f'http://{gateway_ip}:8774/v2.1' 
     #availability_zone = 'nova:Worker1'
-    availability_zone = 'nova:'+''+zona_disponibilidad
+    availability_zone = f'nova:{zona_disponibilidad}'
     resp = create_instance(nova_endpoint, token_for_project, instance_name, flavor_id, image_id, networks,availability_zone)
     print(resp.status_code)
     if resp.status_code == 202:
