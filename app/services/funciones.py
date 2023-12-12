@@ -60,7 +60,38 @@ def crearRed(gateway_ip, token_for_project, network_name):
             return None
     except:
         return None
-    
+
+def obtenerRedes(gateway_ip, token_for_project):
+    neutron_endpoint = f'http://{gateway_ip}:9696/v2.0' 
+    try:
+        resp = get_networks(neutron_endpoint, token_for_project)
+        print(resp.status_code)
+        if resp.status_code == 200:
+            print('NETWORKS OBTAINED SUCCESSFULLY')
+            networks = resp.json()
+            print(json.dumps(networks))
+            return networks
+        else:
+            print('FAILED NETWORKS OBTAINMENT')
+            return None
+    except:
+        return None
+
+def eliminarRed(gateway_ip, token_for_project, network_id):
+    neutron_endpoint = f'http://{gateway_ip}:9696/v2.0' 
+    try:
+        resp = delete_network(neutron_endpoint, token_for_project, network_id)
+        print(resp.status_code)
+        if resp.status_code == 204:
+            print('NETWORK DELETED SUCCESSFULLY')
+            return True
+        else:
+            print('FAILED NETWORK DELETION')
+            return None
+    except:
+        return None
+
+   
 def crearSubred(gateway_ip, token_for_project, network_id, subnet_name, ip_version, cidr):
     neutron_endpoint = f'http://{gateway_ip}:9696/v2.0' 
     try:
@@ -72,6 +103,36 @@ def crearSubred(gateway_ip, token_for_project, network_id, subnet_name, ip_versi
             return subnet_created
         else:
             print('FAILED SUBNET CREATION')
+            return None
+    except:
+        return None
+
+def obtenerSubredes(gateway_ip, token_for_project):
+    neutron_endpoint = f'http://{gateway_ip}:9696/v2.0' 
+    try:
+        resp = get_subnets(neutron_endpoint, token_for_project)
+        print(resp.status_code)
+        if resp.status_code == 200:
+            print('SUBNETS OBTAINED SUCCESSFULLY')
+            subnets = resp.json()
+            print(json.dumps(subnets))
+            return subnets
+        else:
+            print('FAILED SUBNETS OBTAINMENT')
+            return None
+    except:
+        return None
+
+def eliminarSubred(gateway_ip, token_for_project, subnet_id):
+    neutron_endpoint = f'http://{gateway_ip}:9696/v2.0' 
+    try:
+        resp = delete_subnet(neutron_endpoint, token_for_project, subnet_id)
+        print(resp.status_code)
+        if resp.status_code == 204:
+            print('SUBNET DELETED SUCCESSFULLY')
+            return True
+        else:
+            print('FAILED SUBNET DELETION')
             return None
     except:
         return None
@@ -90,11 +151,41 @@ def crearPuerto(gateway_ip, token_for_project, port_name, network_id, project_id
             return None
     except:
         return None
-    
+
+def obtenerPuertos(gateway_ip, token_for_project):
+    neutron_endpoint = f'http://{gateway_ip}:9696/v2.0' 
+    try:
+        resp = get_ports(neutron_endpoint, token_for_project)
+        print(resp.status_code)
+        if resp.status_code == 200:
+            print('PORTS OBTAINED SUCCESSFULLY')
+            ports = resp.json()
+            print(json.dumps(ports))
+            return ports
+        else:
+            print('FAILED PORTS OBTAINMENT')
+            return None
+    except:
+        return None
+
+def eliminarPuerto(gateway_ip, token_for_project, port_id):
+    neutron_endpoint = f'http://{gateway_ip}:9696/v2.0' 
+    try:
+        resp = delete_port(neutron_endpoint, token_for_project, port_id)
+        print(resp.status_code)
+        if resp.status_code == 204:
+            print('PORT DELETED SUCCESSFULLY')
+            return True
+        else:
+            print('FAILED PORT DELETION')
+            return None
+    except:
+        return None  
+
 def crearInstancia(gateway_ip, token_for_project, instance_name, flavor_id, image_id, networks,zona_disponibilidad):
     nova_endpoint = f'http://{gateway_ip}:8774/v2.1' 
     #availability_zone = 'nova:Worker1'
-    availability_zone = 'nova:'+''+zona_disponibilidad
+    availability_zone = f'nova:{zona_disponibilidad}'
     resp = create_instance(nova_endpoint, token_for_project, instance_name, flavor_id, image_id, networks,availability_zone)
     print(resp.status_code)
     if resp.status_code == 202:
@@ -152,7 +243,7 @@ def crearProyecto(gateway_ip, token_for_project, domain_id, project_name, projec
     except:
         return None
 
-def obtenerProyecto(gateway_ip, token_for_project, project_name):
+def obtenerIdProyecto(gateway_ip, token_for_project, project_name):
     keystone_endpoint = f'http://{gateway_ip}:5000/v3'
     try:
         resp = get_projects(keystone_endpoint, token_for_project)
@@ -161,14 +252,28 @@ def obtenerProyecto(gateway_ip, token_for_project, project_name):
             print('PROJECTS OBTAINED SUCCESSFULLY')
             projects = resp.json()
             print(json.dumps(projects))
-            for project in projects:
+            for project in projects["projects"]:
                 if project['name'] == project_name:
-                    print("ID del Proyecto:", project['id'])
+                    print("ID del Proyecto: ", project['id'])
                     return project['id']
             print('PROJECT NOT FOUND')
             return None
         else:
             print('FAILED PROJECTS OBTAINMENT')
+            return None
+    except:
+        return None
+
+def eliminarProyecto(gateway_ip,token_for_project,project_id):
+    keystone_endpoint = f'http://{gateway_ip}:5000/v3'
+    try:
+        resp = deleted_project(keystone_endpoint, token_for_project, project_id)
+        print(resp.status_code)
+        if resp.status_code == 204:
+            print('PROJECT DELETED SUCCESSFULLY')
+            return True
+        else:
+            print('FAILED TO DELETE PROJECT')
             return None
     except:
         return None
@@ -186,7 +291,36 @@ def asignarRol(gateway_ip, admin_token, project_id, user_id, role_id):
             return None
     except:
         return None
+
+def desasignarRol(gateway_ip, admin_token, project_id, user_id, role_id):
+    keystone_endpoint = f'http://{gateway_ip}:5000/v3'
     
+    resp = unassign_role_to_user(keystone_endpoint, admin_token, project_id, user_id, role_id)
+    print(resp.status_code)
+    if resp.status_code == 204:
+        print('ROL DESASIGNADO SUCCESSFULLY')
+        return True
+    else:
+        print('ROL NO DESASIGNADO')
+        return None
+    
+
+def obtenerUsuarios(gateway_ip, admin_token):
+    keystone_endpoint = f'http://{gateway_ip}:5000/v3'
+    try:
+        resp = get_users(keystone_endpoint, admin_token)
+        print(resp.status_code)
+        if resp.status_code == 200:
+            print('USERS OBTAINED SUCCESSFULLY')
+            users = resp.json()
+            print(json.dumps(users))
+            return users
+        else:
+            print('FAILED USERS OBTAINMENT')
+            return None
+    except:
+        return None
+
 def crearFlavor(gateway_ip, token_for_project, name, ram, vcpus, disk, flavor_id):
     nova_endpoint = f'http://{gateway_ip}:8774/v2.1' 
     try:
@@ -202,8 +336,37 @@ def crearFlavor(gateway_ip, token_for_project, name, ram, vcpus, disk, flavor_id
             return None
     except:
         return None
-    
 
+def eliminarFlavor(gateway_ip, token_for_project, flavor_id):
+    nova_endpoint = f'http://{gateway_ip}:8774/v2.1' 
+    try:
+        resp = delete_flavor(nova_endpoint, token_for_project, flavor_id)
+        print(resp.status_code)
+        if resp.status_code == 202:
+            print('INSTANCE DELETED SUCCESSFULLY')
+            return True
+        else:
+            print('FAILED INSTANCE DELETION')
+            return None
+    except:
+        return None
+
+def test():
+    
+    project_name = "estesi"
+
+    # Auth
+    admin_token = obtenerTokenAdmin(GATEWAY_IP,ADMIN_PASSWORD,ADMIN_USERNAME,ADMIN_DOMAIN_NAME,DOMAIN_ID,ADMIN_PROJECT_NAME)
+    project_token = obtenerTokenProject(GATEWAY_IP, admin_token, DOMAIN_ID, project_name)
+    
+    # Obtener id de proyecto
+    project_id = obtenerIdProyecto(GATEWAY_IP, project_token, project_name)
+
+    servers = obtenerInstancias(GATEWAY_IP, project_token)
+    for server in servers:
+        print(server)
+        if server["project_id"] == project_id:
+            print("Eliminando instancia")
 
 def main():
     #Datos que no se cambian
@@ -248,6 +411,3 @@ def main():
         print('Operaciones adicionales realizadas exitosamente.')
     else:
         print('La autenticación del administrador ha fallado. No se pudo obtener el token.')
-
-# if __name__ == "__main__":
-#     main()
