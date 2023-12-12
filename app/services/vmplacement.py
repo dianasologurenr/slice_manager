@@ -1,6 +1,7 @@
 import paramiko
 import json
 from datetime import datetime
+import numpy as np
 
 def restar_ram_from_memory(memory_avail_GB, flavor_ram_MB):
     # Restar la RAM del flavor a la Memory Avail
@@ -94,35 +95,51 @@ def ejecutar_script_remoto(worker, datosflavor):
                 
                 print(f"El worker resultante luego del bucle es {worker_resultante}")
                 
-                if worker_resultante == worker:
-                    print("El worker resultante luego del bucle es el mismo que el original.")
-                    #continuar la lógica del código
-                    for otro_worker in ["Worker1", "Worker2", "Worker3"]:
-                        print(f"Verificando logs de {otro_worker}")
-                        logs_comando = f'cat {otro_worker}_logs.txt'
-                        stdin_logs, stdout_logs, stderr_logs = ssh.exec_command(logs_comando)
+                
+                worker_resultante = None  # Inicializar como None
 
-                        # Analizar los registros de logs
-                        logs = stdout_logs.read().decode('utf-8').splitlines()
-                        for log in logs:
-                            try:
-                                timestamp_str, rest_of_the_line = log.split(" - ", 1)  # Solo se divide en el primer '-'
-                                cpu_str, memoria_str = rest_of_the_line.split(", ")
-                                timestamp = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S")
-                                cpu = float(cpu_str.split(":")[1].strip('%'))
-                                memoria = float(memoria_str.split(":")[1].strip('%'))
+                for otro_worker in ["Worker1", "Worker2", "Worker3"]:
+                    print(f"Verificando logs de {otro_worker}")
+                    logs_comando = f'cat {otro_worker}_logs.txt'
+                    stdin_logs, stdout_logs, stderr_logs = ssh.exec_command(logs_comando)
 
-                                # Verificar si se superan los umbrales
-                                if cpu > 70 or memoria > 60:
-                                    break  # Si se supera, salir del bucle
-                            except ValueError:
-                                # Ignorar líneas que no tienen el formato esperado
-                                continue
-                        else:
-                            # Si el bucle no se rompe, no se superaron los umbrales
-                            worker_resultante = otro_worker
-                            print(f"Se seleccionó el Worker {worker_resultante} debido a los registros de logs.")
-                            break
+                    # Analizar los registros de logs
+                    logs = stdout_logs.read().decode('utf-8').splitlines()
+
+                    # Listas para almacenar valores de cpu y memoria
+                    cpu_values = []
+                    memoria_values = []
+
+                    for log in logs:
+                        try:
+                            timestamp_str, rest_of_the_line = log.split(" - ", 1)  # Solo se divide en el primer '-'
+                            cpu_str, memoria_str = rest_of_the_line.split(", ")
+                            timestamp = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S")
+                            cpu = float(cpu_str.split(":")[1].strip('%'))
+                            memoria = float(memoria_str.split(":")[1].strip('%'))
+
+                            # Agregar valores a las listas
+                            cpu_values.append(cpu)
+                            memoria_values.append(memoria)
+                        except ValueError:
+                            # Ignorar líneas que no tienen el formato esperado
+                            continue
+
+                    # Calcular la varianza
+                    cpu_varianza = np.var(cpu_values)
+                    memoria_varianza = np.var(memoria_values)
+
+                    print(f"Varianza de CPU: {cpu_varianza}, Varianza de Memoria: {memoria_varianza}")
+
+                    # Verificar si la varianza supera el valor de 5
+                    if cpu_varianza > 8 or memoria_varianza > 8:
+                        continue  # Continuar con el siguiente worker
+                    else:
+                        worker_resultante = otro_worker
+                        print(f"Se seleccionó el Worker {worker_resultante} debido a los registros de logs.")
+                        break
+
+                
                     
             else:
                 # Si el Memory Avail es mayor o igual a 1, no es necesario probar con otros workers
