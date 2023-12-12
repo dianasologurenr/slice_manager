@@ -28,6 +28,10 @@ def get_slice_user(db: Session, slice_user: schema.SliceUserBase):
                                                               models_slice_user.SliceUser.id_user==slice_user.id_user).first()
     return convert_sqlalchemy_to_pydantic(slice_user)
 
+def get_slice_user_by_user(db: Session, user_id: str):
+    slice_user = db.query(models_slice_user.SliceUser).filter(models_slice_user.SliceUser.id_user==user_id).first()
+    return convert_sqlalchemy_to_pydantic(slice_user)
+
 def create_slice_user(db: Session, slice_user: schema.SliceUserBase):
     db_slice_user = models_slice_user.SliceUser(
         id_slice = slice_user.id_slice,

@@ -320,7 +320,6 @@ def desasignarRol(gateway_ip, admin_token, project_id, user_id, role_id):
         print('ROL NO DESASIGNADO')
         return None
     
-
 def obtenerUsuarios(gateway_ip, admin_token):
     keystone_endpoint = f'http://{gateway_ip}:5000/v3'
     try:
@@ -333,6 +332,57 @@ def obtenerUsuarios(gateway_ip, admin_token):
             return users
         else:
             print('FAILED USERS OBTAINMENT')
+            return None
+    except:
+        return None
+
+def obtenerIdUsuario(gateway_ip, admin_token, user_name):
+    keystone_endpoint = f'http://{gateway_ip}:5000/v3'
+    try:
+        resp = get_users(keystone_endpoint, admin_token)
+        print(resp.status_code)
+        if resp.status_code == 200:
+            print('USERS OBTAINED SUCCESSFULLY')
+            users = resp.json()
+            print(json.dumps(users))
+            for user in users["users"]:
+                if user['name'] == user_name:
+                    print("ID del Usuario: ", user['id'])
+                    return user['id']
+            print('USER NOT FOUND')
+            return None
+        else:
+            print('FAILED USERS OBTAINMENT')
+            return None
+    except:
+        return None
+
+def crearUsuario(gateway_ip, admin_token, user_name, user_password, user_email):
+    keystone_endpoint = f'http://{gateway_ip}:5000/v3'
+    try:
+        resp = create_user(keystone_endpoint, admin_token, user_name, user_password, user_email)
+        print(resp.status_code)
+        if resp.status_code == 201:
+            print('USER CREATED SUCCESSFULLY')
+            user_created = resp.json()
+            print(json.dumps(user_created))
+            return user_created
+        else:
+            print('FAILED USER CREATION')
+            return None
+    except:
+        return None
+
+def eliminarUsuario(gateway_ip, admin_token, user_id):
+    keystone_endpoint = f'http://{gateway_ip}:5000/v3'
+    try:
+        resp = delete_user(keystone_endpoint, admin_token, user_id)
+        print(resp.status_code)
+        if resp.status_code == 204:
+            print('USER DELETED SUCCESSFULLY')
+            return True
+        else:
+            print('FAILED USER DELETION')
             return None
     except:
         return None

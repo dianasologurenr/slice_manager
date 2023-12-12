@@ -320,10 +320,12 @@ async def delete_slice(id: str,db=Depends(get_db)):
             permiso_admi = openstack.desasignarRol(GATEWAY_IP, admin_token, project_id, ADMIN_ID, ADMIN)
             
             # Unassign role to users
-            # users = openstack.obtenerUsuarios(GATEWAY_IP, project_token)
-            # for user in users["users"]:
-            #     print(f"this is the user: {user['name']}")
-            #     permisos = openstack.desasignarRol(GATEWAY_IP, project_token, user["id"], project_id, READER)
+            users = db_slice.users
+            if users != []:
+                for user in users:
+                    user_id = openstack.obtenerIdUsuario(GATEWAY_IP, project_token, user.username)
+                    if user_id and project_id:
+                        rol = openstack.desasignarRol(GATEWAY_IP, project_token, project_id, user_id, READER)
             
             if permiso_admi:
             
@@ -375,9 +377,6 @@ async def delete_slice(id: str,db=Depends(get_db)):
                         id_user=user.id
                     )
                     crud_slice_user.delete_slice_user(db=db, slice_user=slice_user)
-
-                    #Delete user
-                    crud_user.delete_user(db=db, user_id=user.id)
         
         # Delete slice
         return crud_slice.delete_slice(db=db, slice_id=db_slice.id)
@@ -387,14 +386,52 @@ async def create_slice_user(slice_user: schema.SliceUserBase, db=Depends(get_db)
     db_slice_user = crud_slice_user.get_slice_user(db=db, slice_user=slice_user)
     if db_slice_user:
         raise HTTPException(status_code=400, detail="There user is already assigned to this slice")
-    return crud_slice_user.create_slice_user(db=db, slice_user=slice_user)
+    try:
+        # Create user with openstack
+        project_name = crud_slice.get_slice(db=db, slice_id=slice_user.id_slice).name
+        admin_token = openstack.obtenerTokenAdmin(GATEWAY_IP,ADMIN_PASSWORD,ADMIN_USERNAME,ADMIN_DOMAIN_NAME,DOMAIN_ID,ADMIN_PROJECT_NAME)
+        if admin_token:
+            project_token = openstack.obtenerTokenProject(GATEWAY_IP, admin_token, DOMAIN_ID, project_name)
+            if project_token:
+
+                project_id = openstack.obtenerIdProyecto(GATEWAY_IP, project_token, project_name)
+                user = crud_user.get_user(db=db,user_id=slice_user.id_user)
+                user_id = openstack.obtenerIdUsuario(GATEWAY_IP, project_token, user.username)
+                if user_id and project_id:
+                    rol = openstack.asignarRol(GATEWAY_IP, project_token, project_id, user_id, READER)
+                    if rol:
+                        # Create slice_user
+                        return crud_slice_user.create_slice_user(db=db, slice_user=slice_user)
+
+        raise HTTPException(status_code=400, detail="There was an error creating the user")
+    except:
+        raise HTTPException(status_code=400, detail="There was an error creating the user")
 
 @router.delete("/users/")
 async def delete_slice(slice_user: schema.SliceUserBase,db=Depends(get_db)):
     db_slice_user = crud_slice_user.get_slice_user(db=db, slice_user=slice_user)
     if db_slice_user is None:
         raise HTTPException(status_code=404, detail="User not found in slice")
-    return crud_slice_user.delete_slice_user(db=db, slice_user=slice_user)
+    try:
+        # Unassign user with openstack
+        project_name = crud_slice.get_slice(db=db, slice_id=slice_user.id_slice).name
+        admin_token = openstack.obtenerTokenAdmin(GATEWAY_IP,ADMIN_PASSWORD,ADMIN_USERNAME,ADMIN_DOMAIN_NAME,DOMAIN_ID,ADMIN_PROJECT_NAME)
+        if admin_token:
+            project_token = openstack.obtenerTokenProject(GATEWAY_IP, admin_token, DOMAIN_ID, project_name)
+            if project_token:
+
+                project_id = openstack.obtenerIdProyecto(GATEWAY_IP, project_token, project_name)
+                user = crud_user.get_user(db=db,user_id=slice_user.id_user)
+                user_id = openstack.obtenerIdUsuario(GATEWAY_IP, project_token, user.username)
+                if user_id and project_id:
+                    rol = openstack.desasignarRol(GATEWAY_IP, project_token, project_id, user_id, READER)
+                    if rol:
+                        return crud_slice_user.delete_slice_user(db=db, slice_user=slice_user)
+        raise HTTPException(status_code=400, detail="There was an error deleting the user")
+    except:
+        raise HTTPException(status_code=400, detail="There was an error deleting the user")
+
+    
 
 @router.get("/links/{id_slice}",response_model=List[schema.Link])
 async def read_links_by_slice(id_slice: int, db=Depends(get_db)):

@@ -100,6 +100,34 @@ def deleted_project(auth_endpoint,token,project_id):
     # status_code success = 204
     return r
 
+# crear usuario
+def create_user(auth_endpoint, token, user_name, user_password, user_email):
+        
+    url = auth_endpoint + '/users'
+    headers = {'Content-type': 'application/json', 'X-Auth-Token': token}
+
+    data = \
+        {
+            "user": {
+                "name": user_name,
+                "password": user_password,
+                "email": user_email,
+            }
+        }
+
+    r = requests.post(url=url, headers=headers, data=json.dumps(data))
+    # status_code success = 201
+    return r
+
+def delete_user(auth_endpoint, token, user_id):
+                
+        url = auth_endpoint + '/users/' + user_id
+        headers = {'Content-type': 'application/json', 'X-Auth-Token': token}
+    
+        r = requests.delete(url=url, headers=headers)
+        # status_code success = 204
+        return r
+
 def assign_role_to_user(auth_endpoint, token, project_id, user_id, role_id):
             
     url = auth_endpoint + '/projects/' + project_id + '/users/' + user_id + '/roles/' + role_id
@@ -126,6 +154,7 @@ def get_users(auth_endpoint, token):
     r = requests.get(url=url, headers=headers)
     # status_code success = 200
     return r
+
 
 # NEUTRON API
 #def create_network(auth_endpoint, token, name, network_type=None, segmentation_id=None):
